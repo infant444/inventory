@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+////////////////////
+// ENUMS
+////////////////////
+
+enum UserType {
+  admin
+  manager
+  staff
+}
+
+enum TransactionType {
+  checkin
+  checkout
+}
+
+enum AlertType {
+  ROL
+  EOQ
+}
+
+enum AlertStatus {
+  pending
+  sent
+  acknowledged
+}
+
+////////////////////
+// USERS
+////////////////////
+
+model User {
+  userId            String   @id @default(uuid()) @db.Uuid @map("user_id")
+  fullName          String   @db.VarChar(150) @map("full_name")
+  email             String   @unique @db.VarChar(150)
+  phone             String?  @db.VarChar(20)
+  password          String
+  role              UserType @default(staff)
+  isActive          Boolean  @default(true) @map("is_active")
+  emailNotification Boolean  @default(false) @map("email_notification")
+  locationIds       String[] @db.Uuid @map("location_ids")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+////////////////////
+// LOCATION
+////////////////////
+
+model Location {
+  locationId   String @id @default(uuid()) @db.Uuid @map("location_id")
+  locationCode String @unique @db.VarChar(50) @map("location_code")
+  locationName String @db.VarChar(150) @map("location_name")
+
+  address String?
+  city    String?
+  state   String?
+  country String?
+
+  isActive Boolean @default(true) @map("is_active")
+
+  items ItemMaster[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("locations")
+}
+
+////////////////////
+// SUPPLIER MASTER
+////////////////////
+
+model SupplierMaster {
+  supplierId    String  @id @default(uuid()) @db.Uuid @map("supplier_id")
+  supplierName  String  @db.VarChar(150) @map("supplier_name")
+  contactPerson String? @db.VarChar(100) @map("contact_person")
+  phone         String? @db.VarChar(50)
+  email         String? @db.VarChar(100)
+  address       String?
+  gstNumber     String? @db.VarChar(50) @map("gst_number")
+
+  items     ItemMaster[]
+  purchases PurchaseMaster[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("supplier_master")
+}
+
+////////////////////
+// TYPE MASTER
+////////////////////
+
+model TypeMaster {
+  typeId      String  @id @default(uuid()) @db.Uuid @map("type_id")
+  typeName    String  @unique @db.VarChar(100) @map("type_name")
+  description String?
+
+  items ItemMaster[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("type_master")
+}
+
+////////////////////
+// TAX MASTER
+////////////////////
+
+model TaxMaster {
+  taxId         String  @id @default(uuid()) @db.Uuid @map("tax_id")
+  taxPercentage Decimal @db.Decimal(5, 2) @map("tax_percentage")
+  description   String?
+
+  items ItemMaster[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("tax_master")
+}
+
+////////////////////
+// ITEM MASTER
+////////////////////
+
+model ItemMaster {
+  itemId   String @id @default(uuid()) @db.Uuid @map("item_id")
+  itemCode String @db.VarChar(50) @map("item_code")
+  itemName String @db.VarChar(150) @map("item_name")
+
+  locationId String   @db.Uuid @map("location_id")
+  location   Location @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
+
+  openingQty Decimal @default(0) @db.Decimal(10, 2) @map("opening_qty")
+  currentQty Decimal @default(0) @db.Decimal(10, 2) @map("current_qty")
+
+  barcode String?
+
+  supplierId String?         @db.Uuid @map("supplier_id")
+  supplier   SupplierMaster? @relation(fields: [supplierId], references: [supplierId])
+
+  typeId String?     @db.Uuid @map("type_id")
+  type   TypeMaster? @relation(fields: [typeId], references: [typeId])
+
+  taxId String?    @db.Uuid @map("tax_id")
+  tax   TaxMaster? @relation(fields: [taxId], references: [taxId])
+
+  purchasePrice Decimal  @db.Decimal(10, 2) @map("purchase_price")
+  taxPercent    Decimal? @db.Decimal(5, 2) @map("tax_percent")
+  totalAmount   Decimal? @db.Decimal(10, 2) @map("total_amount")
+
+  transactions TransactionLog[]
+  purchase     PurchaseMaster?
+  alerts       ReorderAlert[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([itemCode, locationId])
+  @@map("item_master")
+}
+
+////////////////////
+// TRANSACTION LOG
+////////////////////
+
+model TransactionLog {
+  transactionId String @id @default(uuid()) @db.Uuid @map("transaction_id")
+
+  itemId String     @db.Uuid @map("item_id")
+  item   ItemMaster @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
+
+  transactionType TransactionType @map("transaction_type")
+  quantity        Decimal @db.Decimal(10, 2)
+  remainingQty    Decimal @db.Decimal(10, 2) @map("remaining_qty")
+  takenBy         String? @map("taken_by")
+  remarks         String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("transaction_log")
+}
+
+////////////////////
+// PURCHASE MASTER
+////////////////////
+
+model PurchaseMaster {
+  purchaseId String @id @default(uuid()) @db.Uuid @map("purchase_id")
+
+  itemId String     @unique @db.Uuid @map("item_id")
+  item   ItemMaster @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
+
+  availableQty Decimal? @db.Decimal(10, 2) @map("available_qty")
+  rol          Decimal  @db.Decimal(10, 2)
+  moq          Decimal? @db.Decimal(10, 2)
+  eoq          Decimal? @db.Decimal(10, 2)
+
+  lastPurchaseDate DateTime? @map("last_purchase_date")
+
+  supplierId String?         @db.Uuid @map("supplier_id")
+  supplier   SupplierMaster? @relation(fields: [supplierId], references: [supplierId])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("purchase_master")
+}
+
+////////////////////
+// REORDER ALERTS
+////////////////////
+
+model ReorderAlert {
+  alertId String @id @default(uuid()) @db.Uuid @map("alert_id")
+
+  itemId String     @db.Uuid @map("item_id")
+  item   ItemMaster @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
+
+  alertType AlertType @map("alert_type")
+  status    AlertStatus @default(pending)
+
+  alertDate DateTime @default(now()) @map("alert_date")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("reorder_alerts")
+}
