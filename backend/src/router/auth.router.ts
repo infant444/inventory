@@ -8,5 +8,5 @@ route.get("/",asyncHandler(async(req,res)=>{
 route.post("/create-user", asyncHandler(AuthController.CreateUser));
 route.post("/login", asyncHandler(AuthController.login));
 route.put("/update-password", asyncHandler(AuthController.updatePassword));
-route.get("/logout/:id", asyncHandler(AuthController.logout));
+route.get("/logout/:user_id", asyncHandler(AuthController.logout));
 export default route;

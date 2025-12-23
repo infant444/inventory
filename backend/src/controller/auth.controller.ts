@@ -3,23 +3,24 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User, UserType } from "../model/user.model";
 import { prisma } from "../lib/prisma";
+import { generatePassword } from "../services/passcode.services";
+import { EmailServices } from "../services/email.services";
 
 export class AuthController {
 
   // ✅ CREATE USER
   static async CreateUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const { full_name, email, phone, password, role, location_ids } = req.body;
+      const { full_name, email, phone, role, location_ids } = req.body;
       console.log(email)
-      if (!full_name || !email || !password) {
+      if (!full_name || !email) {
         return next({ status: 400, message: "Required fields missing" });
       }
-
       const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) {
         return next({ status: 409, message: "User already exists" });
       }
-
+      const password = generatePassword();
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const newUser = await prisma.user.create({
@@ -43,8 +44,20 @@ export class AuthController {
           createdAt: true
         }
       });
-
-      res.status(201).json(newUser);
+      // Send registration email with credentials
+      const userData: User = {
+        user_id: newUser.userId,
+        full_name: newUser.fullName,
+        email: newUser.email,
+        phone: newUser.phone ?? "",
+        password: "",
+        role: newUser.role,
+        is_active: newUser.isActive,
+        email_notification: newUser.emailNotification,
+        location_ids: newUser.locationIds
+      };
+      await EmailServices.registerEmail(password, userData);
+      res.json(newUser);
     } catch (err) {
       next(err);
     }
