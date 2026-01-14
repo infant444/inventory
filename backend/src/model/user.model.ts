@@ -11,4 +11,5 @@ export class User {
   is_active!: boolean;
   email_notification!: boolean;
   location_ids?: string[];
+  first_login?: boolean;
 }

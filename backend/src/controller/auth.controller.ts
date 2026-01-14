@@ -30,7 +30,8 @@ export class AuthController {
           phone: phone ?? null,
           password: hashedPassword,
           role: role ?? 'staff',
-          locationIds: location_ids ?? []
+          locationIds: location_ids ?? [],
+          firstLogin: true
         },
         select: {
           userId: true,
@@ -97,7 +98,8 @@ export class AuthController {
         role: updatedUser.role,
         is_active: updatedUser.isActive,
         email_notification: updatedUser.emailNotification,
-        location_ids: updatedUser.locationIds
+        location_ids: updatedUser.locationIds,
+        first_login: updatedUser.firstLogin ?? false
       };
 
       res.json(generateUserToken(userData));
@@ -130,7 +132,7 @@ export class AuthController {
 
       await prisma.user.update({
         where: { userId: user_id },
-        data: { password: hashedPassword }
+        data: { password: hashedPassword, firstLogin: false }
       });
 
       res.json({ status: 200, message: "Password updated successfully" });
@@ -177,6 +179,7 @@ const generateUserToken = (user: User) => {
     is_active: user.is_active,
     email_notification: user.email_notification,
     location_ids: user.location_ids,
+    first_login: user.first_login,
     token
   };
 };

@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ path: '../.env' });
 import express from 'express';
 import cors from 'cors';
 import { errorHandler } from './middleware/error.middleware';
@@ -13,7 +13,7 @@ const app=express();
 app.use(express.json());
 app.use(cors({
     credentials:true,
-    origin:["http://localhost:3000"]
+    origin:["http://localhost:3000", "http://localhost:5173"]
 }));
 
 app.get("/",(req,res)=>{

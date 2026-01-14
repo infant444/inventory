@@ -15,6 +15,7 @@ model User {
   phone             String?        @db.VarChar(20)
   password          String
   role              UserType       @default(staff)
+  firstLogin        Boolean        @default(true) @map("first_login")
   isActive          Boolean        @default(true) @map("is_active")
   emailNotification Boolean        @default(false) @map("email_notification")
   locationIds       String[]       @map("location_ids") @db.Uuid
