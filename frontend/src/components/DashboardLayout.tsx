@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/immutability */
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLocation as useSelectedLocation } from '../context/LocationContext';
-import { locationAPI } from '../services/api';
+import { authAPI, locationAPI } from '../services/api';
 import LocationSelector from './LocationSelector';
 import { 
   Menu, 
@@ -17,7 +19,8 @@ import {
   LogOut,
   User,
   Bell,
-  ChevronDown
+  ChevronDown,
+  Settings as SettingsIcon
 } from 'lucide-react';
 
 const DashboardLayout: React.FC = () => {
@@ -55,6 +58,7 @@ const DashboardLayout: React.FC = () => {
   };
 
   const handleLogout = () => {
+    authAPI.logout();
     logout();
     navigate('/login');
   };
@@ -62,11 +66,12 @@ const DashboardLayout: React.FC = () => {
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard', roles: ['admin', 'manager', 'staff'] },
     { icon: Package, label: 'Items', path: '/dashboard/items', roles: ['admin', 'manager', 'staff'] },
-    { icon: MapPin, label: 'Locations', path: '/dashboard/locations', roles: ['admin', 'manager'] },
+    { icon: MapPin, label: 'Locations', path: '/dashboard/locations', roles: ['admin'] },
     { icon: Users, label: 'Users', path: '/dashboard/users', roles: ['admin'] },
     { icon: Truck, label: 'Suppliers', path: '/dashboard/suppliers', roles: ['admin', 'manager'] },
     { icon: Tags, label: 'Categories', path: '/dashboard/categories', roles: ['admin', 'manager'] },
     { icon: Calculator, label: 'Tax Settings', path: '/dashboard/tax', roles: ['admin'] },
+    { icon: SettingsIcon, label: 'Settings', path: '/dashboard/settings', roles: ['admin', 'manager', 'staff'] },
   ];
 
   const filteredMenuItems = menuItems.filter(item => 
@@ -140,7 +145,7 @@ const DashboardLayout: React.FC = () => {
       <div className="lg:ml-64">
         {/* Top header */}
         <header className="bg-white shadow-sm border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-6">
+          <div className="flex items-center justify-between lg:justify-end h-16 px-6">
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden text-gray-500 hover:text-gray-700"
@@ -148,7 +153,7 @@ const DashboardLayout: React.FC = () => {
               <Menu className="w-6 h-6" />
             </button>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center  space-x-4">
               <div className="hidden md:block relative">
                 <button
                   onClick={() => setShowLocationDropdown(!showLocationDropdown)}

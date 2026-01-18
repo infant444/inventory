@@ -32,6 +32,33 @@ export class EmailServices {
         }
         return mailSender(template, `Welcome to ${company_name}`, user.email);
     }
+    static resetPasswordEmail(passcode: string, user: User) {
+        let template = {
+            body: {
+                name: user.full_name,
+                intro: `You have requested to reset your password. Please use the following code to reset your password:`,
+                action: {
+                    instructions: 'Here are your login credentials to access your staff portal:',
+                    button: {
+                        color: '#22BC66',
+                        text: 'Go to Staff Portal',
+                        link: `${domain}/login`
+                    }
+                },
+                dictionary: {
+                    'email': user.email,
+                    'Password': passcode
+                },
+                outro: [
+                    "Please keep your login credentials secure and do not share them with anyone.",
+                    "We wish you success in your role and look forward to your contributions.",
+
+                ]
+            }
+
+        }
+        return mailSender(template, `Reset Password`, user.email);
+    }
 }
 
 

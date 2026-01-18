@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LocationProvider } from './context/LocationContext';
+import { LoadingProvider } from './context/LoadingContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/DashboardLayout';
 import Login from './pages/Login';
@@ -12,12 +13,24 @@ import UsersPage from './pages/Users';
 import Suppliers from './pages/Suppliers';
 import Categories from './pages/Categories';
 import TaxSettings from './pages/TaxSettings';
-import LocationSelector from './components/LocationSelector';
+import Settings from './pages/Settings';
+import { ToastContainer } from 'react-toastify';
+// import LocationSelector from './components/LocationSelector';
 
 function App() {
   return (
     <AuthProvider>
       <LocationProvider>
+        <LoadingProvider>
+          <ToastContainer
+          position="bottom-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          theme="light"
+        />
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -31,7 +44,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="items" element={<Items />} />
               <Route path="locations" element={
-                <ProtectedRoute requiredRoles={['admin', 'manager']}>
+                <ProtectedRoute requiredRoles={['admin']}>
                   <Locations />
                 </ProtectedRoute>
               } />
@@ -55,9 +68,11 @@ function App() {
                   <TaxSettings />
                 </ProtectedRoute>
               } />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
         </Router>
+        </LoadingProvider>
       </LocationProvider>
     </AuthProvider>
   );

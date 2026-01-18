@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -40,9 +41,10 @@ export const authAPI = {
   
   updatePassword: (data: any) =>
     api.put('/auth/update-password', data),
-  
-  logout: (userId: string) =>
-    api.get(`/auth/logout/${userId}`),
+  logout: () =>
+    api.get(`/auth/logout`),
+  resetPassword: (userId: string) =>
+    api.put(`/auth/reset-password/${userId}`),
 };
 
 export const userAPI = {

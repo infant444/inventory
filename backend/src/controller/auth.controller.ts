@@ -140,12 +140,49 @@ export class AuthController {
       next(error);
     }
   }
+  static async resetPassword(req:Request,res:Response,next:NextFunction){
+    try{
+      const user_id=req.params.userid;
+      const password = generatePassword();
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user=await prisma.user.update({
+        where: { userId: user_id },
+        data: { password: hashedPassword, firstLogin: true },
+               select: {
+          userId: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          emailNotification: true,
+          locationIds: true,
+          createdAt: true
+        }
+      });
+          const userData: User = {
+        user_id:user.userId,
+        full_name:user.fullName,
+        email:user.email,
+        phone:user.phone ?? "",
+        password: "",
+        role:user.role,
+        is_active:user.isActive,
+        email_notification:user.emailNotification,
+        location_ids:user.locationIds
+      };
+      await EmailServices.resetPasswordEmail(password, userData);
+      res.json({ status: 200, message: "Password updated successfully" });
+    }catch(err){
+      next(err);
+    }
+  }
 
   // 🚪 LOGOUT
-  static async logout(req: Request, res: Response, next: NextFunction) {
+  static async logout(req: any, res: Response, next: NextFunction) {
     try {
-      const userId = req.params.user_id;
-
+      const userId = req.user.id;
+      // console.log(userId)
       await prisma.user.update({
         where: { userId },
         data: { isActive: false }

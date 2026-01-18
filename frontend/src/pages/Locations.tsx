@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Plus, Edit2, Trash2, X } from 'lucide-react';
+import { MapPin, Plus, Edit2, Trash2, X, Eye } from 'lucide-react';
 import { locationAPI } from '../services/api';
+import { useLoading } from '../context/LoadingContext';
 
 interface Location {
   locationId: string;
@@ -15,26 +16,32 @@ interface Location {
 const Locations: React.FC = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [viewingLocation, setViewingLocation] = useState<Location | null>(null);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [formData, setFormData] = useState({ locationCode: '', locationName: '', address: '', city: '', state: '', country: '' });
   const [loading, setLoading] = useState(false);
+  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
     fetchLocations();
   }, []);
 
   const fetchLocations = async () => {
+    showLoading("");
     try {
       const response = await locationAPI.getAllLocation();
       setLocations(response.data.data || response.data);
     } catch (error) {
       console.error('Error fetching locations:', error);
     }
+    finally{
+      hideLoading();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    showLoading("")
     try {
       if (editingLocation) {
         await locationAPI.updateLocation(editingLocation.locationId, formData);
@@ -47,16 +54,22 @@ const Locations: React.FC = () => {
       console.error('Error saving location:', error);
     } finally {
       setLoading(false);
+      hideLoading()
     }
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this location?')) {
+      showLoading("Deleting Location")
       try {
+
         await locationAPI.deleteLocation(id);
         fetchLocations();
       } catch (error) {
         console.error('Error deleting location:', error);
+      }
+      finally{
+        hideLoading()
       }
     }
   };
@@ -79,7 +92,7 @@ const Locations: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Locations</h1>
         <button onClick={() => openModal()} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
@@ -116,6 +129,9 @@ const Locations: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-gray-600">{location.city || '-'}</td>
                     <td className="px-6 py-4 text-sm text-right">
                       <div className="flex justify-end gap-2">
+                        <button onClick={() => setViewingLocation(location)} className="text-green-600 hover:text-green-800 inline-flex items-center">
+                          <Eye size={16} />
+                        </button>
                         <button onClick={() => openModal(location)} className="text-blue-600 hover:text-blue-800 inline-flex items-center">
                           <Edit2 size={16} />
                         </button>
@@ -131,6 +147,45 @@ const Locations: React.FC = () => {
           </div>
         )}
       </div>
+
+      {viewingLocation && (
+        <div className="fixed h-full top-0 inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Location Details</h2>
+              <button onClick={() => setViewingLocation(null)} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">Location Code</label>
+                <p className="text-gray-900 font-medium">{viewingLocation.locationCode}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">Location Name</label>
+                <p className="text-gray-900 font-medium">{viewingLocation.locationName}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">Address</label>
+                <p className="text-gray-900">{viewingLocation.address || '-'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">City</label>
+                <p className="text-gray-900">{viewingLocation.city || '-'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">State</label>
+                <p className="text-gray-900">{viewingLocation.state || '-'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">Country</label>
+                <p className="text-gray-900">{viewingLocation.country || '-'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
