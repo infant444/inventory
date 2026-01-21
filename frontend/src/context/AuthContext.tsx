@@ -2,6 +2,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { authAPI } from '../services/api';
 
 interface User {
   user_id: string;
@@ -65,6 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     setUser(null);
+    authAPI.logout();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   };
