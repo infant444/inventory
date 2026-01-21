@@ -64,9 +64,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  const logout = () => {
+  const logout = async() => {
     setUser(null);
-    authAPI.logout();
+   await authAPI.logout();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   };
