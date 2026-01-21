@@ -3,7 +3,7 @@ import asyncHandler from 'express-async-handler';
 import { LocationController } from "../controller/location.controller";
 import authMiddleware from '../middleware/auth.middleware';
 const route=Router();
-route.use(authMiddleware)
+route.use(authMiddleware);
 route.post("/create-location",asyncHandler(LocationController.createLocation));
 
 route.get("/get-all-location", asyncHandler(LocationController.getAllLocation));

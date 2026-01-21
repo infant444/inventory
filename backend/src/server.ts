@@ -9,6 +9,7 @@ import UserRouter from './router/user.router';
 import TaxRouter from './router/tax.router';
 import CategoriesRouter from './router/categories.router';
 import SupplierRouter from './router/supplier.router';
+import ProductRouter from './router/product.router';
 const app=express();
 app.use(express.json());
 app.use(cors({
@@ -25,7 +26,8 @@ app.use("/api/user",UserRouter);
 app.use("/api/location", LocationRouter);
 app.use("/api/tax", TaxRouter);
 app.use("/api/categories",CategoriesRouter)
-app.use("/api/supplier",SupplierRouter)
+app.use("/api/supplier",SupplierRouter);
+app.use("/api/item",ProductRouter)
 app.use(errorHandler);
 
 const port=process.env.PORT || 5000;

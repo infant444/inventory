@@ -60,6 +60,7 @@ const DashboardLayout: React.FC = () => {
   const handleLogout = () => {
     authAPI.logout();
     logout();
+    
     navigate('/login');
   };
 

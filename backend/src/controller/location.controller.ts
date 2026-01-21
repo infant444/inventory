@@ -103,22 +103,24 @@ export class LocationController {
     // Assign a location to user
     static async assignLocation(req: any, res: Response, next: NextFunction) {
         try {
-            const {
-                locationId,
-            } = req.body;
+            const { locationId } = req.body;
             const userId = req.user.id;
+            
+            // Extract locationId if it's an object
+            const actualLocationId = typeof locationId === 'object' ? locationId.locationId : locationId;
+            
             const user = await prisma.userLocation.findFirst({
                 where: {
                     userId: userId
                 }
             });
             if (user) {
-                const UserLocation = await prisma.userLocation.updateMany({
+                const UserLocation = await prisma.userLocation.update({
                     where: {
-                        userId: userId
+                        id: user.id
                     },
                     data: {
-                        locationId: locationId
+                        locationId: actualLocationId
                     }
                 })
                 res.status(200).json(UserLocation)
@@ -126,7 +128,7 @@ export class LocationController {
             }
             const userLocation = await prisma.userLocation.create({
                 data: {
-                    locationId: locationId,
+                    locationId: actualLocationId,
                     userId: userId,
                 }
 

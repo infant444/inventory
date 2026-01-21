@@ -45,6 +45,7 @@ const UsersPage: React.FC = () => {
     email: "",
     phone: "",
     role: "",
+    location_ids: [] as string[],
   });
   const [addFormData, setAddFormData] = useState({
     full_name: "",
@@ -158,10 +159,11 @@ const UsersPage: React.FC = () => {
         email: user.email,
         phone: user.phone || "",
         role: user.role || "",
+        location_ids: user.locationIds || [],
       });
     } else {
       setEditingUser(null);
-      setFormData({ fullName: "", email: "", phone: "", role: "" });
+      setFormData({ fullName: "", email: "", phone: "", role: "", location_ids: [] });
     }
     setIsModalOpen(true);
   };
@@ -169,7 +171,16 @@ const UsersPage: React.FC = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingUser(null);
-    setFormData({ fullName: "", email: "", phone: "", role: "" });
+    setFormData({ fullName: "", email: "", phone: "", role: "", location_ids: [] });
+  };
+
+  const toggleEditLocation = (locationId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      location_ids: prev.location_ids.includes(locationId)
+        ? prev.location_ids.filter((id) => id !== locationId)
+        : [...prev.location_ids, locationId],
+    }));
   };
 
   const closeAddModal = () => {
@@ -472,6 +483,49 @@ const UsersPage: React.FC = () => {
                   <option value="manager">Manager</option>
                   <option value="staff">Staff</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Assign Locations
+                </label>
+                <div className="border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto">
+                  {locations.length === 0 ? (
+                    <p className="text-sm text-gray-500">
+                      No locations available
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {locations.map((location) => (
+                        <label
+                          key={location.locationId}
+                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.location_ids.includes(
+                              location.locationId
+                            )}
+                            onChange={() =>
+                              toggleEditLocation(location.locationId)
+                            }
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-medium text-gray-900">
+                              {location.locationName}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-2">
+                              ({location.locationCode})
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.location_ids.length} location(s) selected
+                </p>
               </div>
               <div className="flex gap-2 justify-end">
                 <button

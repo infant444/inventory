@@ -13,8 +13,13 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
+  const selectedLocation = localStorage.getItem('selectedLocation');
   if (token) {
     config.headers.access_token = token;
+  }
+  if (selectedLocation) {
+    const location = JSON.parse(selectedLocation);
+    config.headers.location_id = location.locationId;
   }
   return config;
 });
@@ -80,6 +85,17 @@ export const taxAPI = {
   createTax: (data: any) => api.post('/tax/create', data),
   updateTax: (taxId: string, data: any) => api.put(`/tax/update/${taxId}`, data),
   deleteTax: (taxId: string) => api.delete(`/tax/delete/${taxId}`),
+};
+
+export const itemAPI = {
+  getItems: () => api.get('/item/all'),
+  getItemById: (itemId: string) => api.get(`/item/get-by-id/${itemId}`),
+  getItemByBarcode: (barcode: string) => api.get(`/item/barcode/${barcode}`),
+  createItem: (data: any) => api.post('/item/create', data),
+  updateItem: (itemId: string, data: any) => api.put(`/item/update/${itemId}`, data),
+  deleteItem: (itemId: string) => api.delete(`/item/delete/${itemId}`),
+  getItemConfig: (itemId: string) => api.get(`/item/config/${itemId}`),
+  updateItemConfig: (itemId: string, data: any) => api.put(`/item/config/update/${itemId}`, data),
 };
 
 export const categoriesAPI = {

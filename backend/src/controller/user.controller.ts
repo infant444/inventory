@@ -5,7 +5,7 @@ import { prisma } from "../lib/prisma";
 export class UserController {
     static async getById(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = req.params["user-id"];
+            const userId = req.params.userId;
             const user = await prisma.user.findUnique({ where: { userId: userId } });
             res.json(user);
         } catch (e) {
@@ -23,8 +23,17 @@ export class UserController {
 
     static async updateUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = req.params["user-id"];
-            const user = await prisma.user.update({ where: { userId: userId }, data: req.body });
+            const userId = req.params.userId;
+            const { full_name, email, phone, role, location_ids } = req.body;
+            const user = await prisma.user.update({
+                where: { userId: userId }, data: {
+                    fullName: full_name,
+                    email,
+                    phone: phone ?? null,
+                    role: role ?? 'staff',
+                    locationIds: location_ids ?? [],
+                }
+            });
             res.json(user);
         } catch (e) {
             next(e);

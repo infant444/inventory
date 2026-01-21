@@ -5,7 +5,7 @@ export class ItemController {
     static async addItem(req: Request, res: Response, next: NextFunction) {
         try {
             const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent, rol, moq, eoq } = req.body;
-            const total_amount = purchase_price + (purchase_price * tax_percent) / 100;
+            const total_amount = purchase_price + ((purchase_price * tax_percent) / 100);
             const item = await prisma.itemMaster.create({
                 data: {
                     itemCode: item_code,
@@ -38,17 +38,21 @@ export class ItemController {
     }
     static async getAllItem(req: any, res: Response, next: NextFunction) {
         try {
+            const locationId = req.headers.location_id;
+            if (!locationId) {
+                res.status(400).json({ message: "Location ID required" });
+                return;
+            }
+            
             const items = await prisma.itemMaster.findMany({
                 where: {
-                    locationId: req.locationId
-
+                    locationId: locationId
                 }, include: {
                     location: true,
                     supplier: true,
                     type: true,
                     tax: true,
                 }
-
             })
             res.status(200).json(items)
         } catch (err) {
@@ -58,10 +62,15 @@ export class ItemController {
 
     static async getItemById(req: any, res: Response, next: NextFunction) {
         try {
-            const id = req.params.ItemsId;
+             const locationId = req.headers.location_id;
+            if (!locationId) {
+                res.status(400).json({ message: "Location ID required" });
+                return;
+            }
+            const id = req.params.itemId;
             const items = await prisma.itemMaster.findMany({
                 where: {
-                    locationId: req.locationId,
+                    locationId:locationId,
                     itemId: id
                 }, include: {
                     location: true,
@@ -80,8 +89,14 @@ export class ItemController {
     static async getItemByBarcode(req: any, res: Response, next: NextFunction) {
         try {
             const barcode = req.params.barcode;
+            const locationId = req.headers.location_id;
+            if (!locationId) {
+                res.status(400).json({ message: "Location ID required" });
+                return;
+            }
             const item = await prisma.itemMaster.findFirst({
                 where: {
+                    locationId: locationId,
                     barcode: barcode
                 }
             })
@@ -92,7 +107,7 @@ export class ItemController {
     }
     static async updateItem(req: any, res: Response, next: NextFunction) {
         try {
-            const id = req.params.ItemsId;
+            const id = req.params.itemId;
             const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent } = req.body;
             const total_amount = purchase_price + (purchase_price * tax_percent) / 100;
             const item = await prisma.itemMaster.update({
@@ -121,7 +136,7 @@ export class ItemController {
  
     static async deleteItem(req: any, res: Response, next: NextFunction) {
         try {
-            const id = req.params.ItemsId;
+            const id = req.params.itemId;
             const item = await prisma.itemMaster.delete({
                 where: {
                     itemId: id
@@ -138,7 +153,7 @@ export class ItemController {
         try {
             const items = await prisma.purchaseMaster.findMany({
                 where: {
-                    itemId: req.params.ItemsId
+                    itemId: req.params.itemId
                 }
             })
             res.status(200).json(items)
@@ -148,7 +163,7 @@ export class ItemController {
     }
        static async updateItemConfig(req: any, res: Response, next: NextFunction) {
         try {
-            const id = req.params.ItemsId;
+            const id = req.params.itemsId;
             const { rol, moq, eoq } = req.body;
             const item = await prisma.purchaseMaster.update({
                 where: {
@@ -165,4 +180,6 @@ export class ItemController {
             next(err)
         }
     }
+
+
 }
