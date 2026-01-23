@@ -9,7 +9,6 @@ import {
   TrendingUp, 
   AlertTriangle,
   Activity,
-  Calendar
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {

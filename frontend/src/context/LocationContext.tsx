@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api, { locationAPI } from '../services/api';
+import { locationAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 
 interface Location {
