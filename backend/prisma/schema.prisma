@@ -50,6 +50,9 @@ model SupplierMaster {
   phone         String?          @db.VarChar(50)
   email         String?          @db.VarChar(100)
   address       String?
+  vatId         String?          @map("vat_id") @db.VarChar(50)
+  taxId         String?          @map("tax_id") @db.VarChar(50)
+  ibanNumber    String?          @map("iban_number") @db.VarChar(50)
   gstNumber     String?          @map("gst_number") @db.VarChar(50)
   createdAt     DateTime         @default(now()) @map("created_at")
   updatedAt     DateTime         @updatedAt @map("updated_at")
@@ -170,6 +173,26 @@ model UserLocation {
   @@map("user_locations")
 }
 
+model Invoice {
+  invoiceId      String        @id @default(uuid()) @map("invoice_id") @db.Uuid
+  invoiceNumber  String        @unique @map("invoice_number") @db.VarChar(100)
+  invoiceName    String        @map("invoice_name") @db.VarChar(200)
+  supplierId     String?       @map("supplier_id") @db.Uuid
+  amount         Decimal       @db.Decimal(10, 2)
+  invoiceDate    DateTime      @map("invoice_date")
+  dueDate        DateTime      @map("due_date")
+  status         InvoiceStatus @default(pending)
+  paidDate       DateTime?     @map("paid_date")
+  paymentMode    String?       @map("payment_mode") @db.VarChar(50)
+  notes          String?
+  locationId     String        @map("location_id") @db.Uuid
+  createdBy      String        @map("created_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@map("invoices")
+}
+
 enum UserType {
   admin
   manager
@@ -190,4 +213,11 @@ enum AlertStatus {
   pending
   sent
   acknowledged
+}
+
+enum InvoiceStatus {
+  pending
+  paid
+  overdue
+  cancelled
 }

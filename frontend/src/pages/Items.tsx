@@ -54,11 +54,15 @@ const Items: React.FC = () => {
   }, []);
 
   const fetchItems = async () => {
+    showLoading('Loading items...');
     try {
       const response = await itemAPI.getItems();
       setItems(response.data);
     } catch (error) {
       console.error('Error fetching items:', error);
+      toast.error('Failed to load items');
+    } finally {
+      hideLoading();
     }
   };
 
@@ -241,7 +245,7 @@ const Items: React.FC = () => {
                       <BarcodeComponent value={item.barcode || ''} width={1} height={25} />
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">{item.currentQty}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">${item.totalAmount}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">₹{item.totalAmount}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{item.supplier?.supplierName || '-'}</td>
                     <td className="px-6 py-4 text-sm text-right">
                       <div className="flex justify-end gap-2">
@@ -291,7 +295,7 @@ const Items: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1">Purchase Price</label>
-                <p className="text-gray-900">${viewingItem.purchasePrice}</p>
+                <p className="text-gray-900">₹{viewingItem.purchasePrice}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1">Barcode</label>

@@ -20,7 +20,10 @@ import {
   User,
   Bell,
   ChevronDown,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  ArrowLeftRight,
+  FileText,
+  CreditCard
 } from 'lucide-react';
 
 const DashboardLayout: React.FC = () => {
@@ -67,6 +70,9 @@ const DashboardLayout: React.FC = () => {
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard', roles: ['admin', 'manager', 'staff'] },
     { icon: Package, label: 'Items', path: '/dashboard/items', roles: ['admin', 'manager', 'staff'] },
+    { icon: ArrowLeftRight, label: 'Check-In/Out', path: '/dashboard/checkin-checkout', roles: ['admin', 'manager', 'staff'] },
+    { icon: CreditCard, label: 'Payment Tracker', path: '/dashboard/payment-tracker', roles: ['admin', 'manager', 'staff'] },
+    { icon: FileText, label: 'Reports', path: '/dashboard/reports', roles: ['admin', 'manager', 'staff'] },
     { icon: MapPin, label: 'Locations', path: '/dashboard/locations', roles: ['admin'] },
     { icon: Users, label: 'Users', path: '/dashboard/users', roles: ['admin'] },
     { icon: Truck, label: 'Suppliers', path: '/dashboard/suppliers', roles: ['admin', 'manager'] },
@@ -90,7 +96,7 @@ const DashboardLayout: React.FC = () => {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
@@ -106,7 +112,7 @@ const DashboardLayout: React.FC = () => {
           </button>
         </div>
 
-        <nav className="mt-6">
+        <nav className="flex-1 overflow-y-auto mt-6">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -131,7 +137,7 @@ const DashboardLayout: React.FC = () => {
           })}
         </nav>
 
-        <div className="absolute bottom-0 w-full p-6 border-t border-gray-200">
+        <div className="border-t border-gray-200 p-6 bg-white">
           <button
             onClick={handleLogout}
             className="w-full flex items-center px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -155,37 +161,6 @@ const DashboardLayout: React.FC = () => {
             </button>
 
             <div className="flex items-center  space-x-4">
-              <div className="hidden md:block relative">
-                <button
-                  onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-                  className="flex items-center bg-green-50 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors"
-                >
-                  <MapPin className="w-4 h-4 text-green-600 mr-2" />
-                  <span className="text-sm font-medium text-green-700">{selectedLocation.locationCode}</span>
-                  <ChevronDown className="w-4 h-4 text-green-600 ml-2" />
-                </button>
-                {showLocationDropdown && (
-                  <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px] z-50">
-                    {availableLocations.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-gray-500">No other locations</div>
-                    ) : (
-                      availableLocations.map((loc) => (
-                        <button
-                          key={loc.locationId}
-                          onClick={() => handleLocationChange(loc)}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                            loc.locationId === selectedLocation.locationId ? 'bg-green-50 text-green-700' : 'text-gray-700'
-                          }`}
-                        >
-                          <div className="font-medium">{loc.locationName}</div>
-                          <div className="text-xs text-gray-500">{loc.locationCode}</div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-              
               <button className="text-gray-500 hover:text-gray-700">
                 <Bell className="w-6 h-6" />
               </button>

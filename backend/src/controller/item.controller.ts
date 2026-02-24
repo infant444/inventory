@@ -98,6 +98,38 @@ export class ItemController {
                 where: {
                     locationId: locationId,
                     barcode: barcode
+                },
+                include: {
+                    location: true,
+                    supplier: true,
+                    type: true,
+                    tax: true,
+                }
+            })
+            res.status(200).json(item)
+        } catch (err) {
+            next(err)
+        }
+    }
+
+    static async getItemByCode(req: any, res: Response, next: NextFunction) {
+        try {
+            const itemCode = req.params.itemCode;
+            const locationId = req.headers.location_id;
+            if (!locationId) {
+                res.status(400).json({ message: "Location ID required" });
+                return;
+            }
+            const item = await prisma.itemMaster.findFirst({
+                where: {
+                    locationId: locationId,
+                    itemCode: itemCode
+                },
+                include: {
+                    location: true,
+                    supplier: true,
+                    type: true,
+                    tax: true,
                 }
             })
             res.status(200).json(item)

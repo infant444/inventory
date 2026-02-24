@@ -1,16 +1,39 @@
-import React, { useState } from 'react';
-import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Mail, Lock, Eye, EyeOff, MapPin, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { authAPI, userAPI } from '../services/api';
+import { useLocation } from '../context/LocationContext';
+import { authAPI, userAPI, locationAPI } from '../services/api';
 import { useLoading } from '../context/LoadingContext';
 import { toast } from 'react-toastify';
 
 const Settings: React.FC = () => {
   const { user } = useAuth();
+  const { selectedLocation, setSelectedLocation } = useLocation();
   const { showLoading, hideLoading } = useLoading();
   const [emailNotification, setEmailNotification] = useState(user?.email_notification || false);
   const [showPassword, setShowPassword] = useState({ old: false, new: false, confirm: false });
   const [passwordData, setPasswordData] = useState({ password: '', new_password: '', confirm_password: '' });
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [availableLocations, setAvailableLocations] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchUserLocations();
+  }, []);
+
+  const fetchUserLocations = async () => {
+    try {
+      const response = await locationAPI.getUserLocation();
+      setAvailableLocations(response.data);
+    } catch (error) {
+      console.error('Error fetching user locations:', error);
+    }
+  };
+
+  const handleLocationChange = (location: any) => {
+    setSelectedLocation(location);
+    setShowLocationDropdown(false);
+    toast.success(`Switched to ${location.locationName}`);
+  };
 
   const handleEmailNotificationToggle = async () => {
     showLoading('Updating notification settings...');
@@ -52,6 +75,54 @@ const Settings: React.FC = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+
+      {/* Location Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <MapPin className="w-5 h-5 text-gray-600" />
+          <h2 className="text-lg font-semibold text-gray-900">Location</h2>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-2">Current Location</label>
+            <div className="relative">
+              <button
+                onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+                className="w-full md:w-auto flex items-center justify-between bg-green-50 px-4 py-3 rounded-lg hover:bg-green-100 transition-colors border border-green-200"
+              >
+                <div className="flex items-center">
+                  <MapPin className="w-5 h-5 text-green-600 mr-3" />
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-green-700">{selectedLocation?.locationName}</p>
+                    <p className="text-xs text-green-600">{selectedLocation?.locationCode}</p>
+                  </div>
+                </div>
+                <ChevronDown className="w-5 h-5 text-green-600 ml-4" />
+              </button>
+              {showLocationDropdown && (
+                <div className="absolute top-full mt-2 left-0 bg-white rounded-lg shadow-lg border border-gray-200 py-2 w-full md:min-w-[300px] z-50">
+                  {availableLocations.length === 0 ? (
+                    <div className="px-4 py-2 text-sm text-gray-500">No other locations</div>
+                  ) : (
+                    availableLocations.map((loc) => (
+                      <button
+                        key={loc.locationId}
+                        onClick={() => handleLocationChange(loc)}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
+                          loc.locationId === selectedLocation?.locationId ? 'bg-green-50' : ''
+                        }`}
+                      >
+                        <div className="font-medium text-gray-900">{loc.locationName}</div>
+                        <div className="text-xs text-gray-500">{loc.locationCode}</div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Profile Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">

@@ -13,6 +13,9 @@ import Suppliers from './pages/Suppliers';
 import Categories from './pages/Categories';
 import TaxSettings from './pages/TaxSettings';
 import Settings from './pages/Settings';
+import CheckInOut from './pages/CheckInOut';
+import Reports from './pages/Reports';
+import PaymentTracker from './pages/PaymentTracker';
 import { ToastContainer } from 'react-toastify';
 // import LocationSelector from './components/LocationSelector';
 
@@ -42,6 +45,9 @@ function App() {
             }>
               <Route index element={<Dashboard />} />
               <Route path="items" element={<Items />} />
+              <Route path="checkin-checkout" element={<CheckInOut />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="payment-tracker" element={<PaymentTracker />} />
               <Route path="locations" element={
                 <ProtectedRoute requiredRoles={['admin']}>
                   <Locations />

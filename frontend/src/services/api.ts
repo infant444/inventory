@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 
-// const API_BASE_URL = 'http://localhost:5000/api';
-const API_BASE_URL = 'https://inventory-z6w5.onrender.com/api';
+const API_BASE_URL = 'http://localhost:5000/api';
+// const API_BASE_URL = 'https://inventory-z6w5.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -92,6 +92,7 @@ export const itemAPI = {
   getItems: () => api.get('/item/all'),
   getItemById: (itemId: string) => api.get(`/item/get-by-id/${itemId}`),
   getItemByBarcode: (barcode: string) => api.get(`/item/barcode/${barcode}`),
+  getItemByCode: (itemCode: string) => api.get(`/item/code/${itemCode}`),
   createItem: (data: any) => api.post('/item/create', data),
   updateItem: (itemId: string, data: any) => api.put(`/item/update/${itemId}`, data),
   deleteItem: (itemId: string) => api.delete(`/item/delete/${itemId}`),
@@ -105,6 +106,29 @@ export const categoriesAPI = {
   createCategory: (data: any) => api.post('/categories/create', data),
   updateCategory: (categoriesId: string, data: any) => api.put(`/categories/update/${categoriesId}`, data),
   deleteCategory: (categoriesId: string) => api.delete(`/categories/delete/${categoriesId}`),
+};
+
+export const productAPI = {
+  checkIn: (data: any) => api.post('/product/checkin', data),
+  checkOut: (data: any) => api.post('/product/checkout', data),
+  batchCheckIn: (data: any) => api.post('/product/batch-checkin', data),
+  batchCheckOut: (data: any) => api.post('/product/batch-checkout', data),
+  getTodayStats: () => api.get('/product/today-stats'),
+};
+
+export const reportAPI = {
+  getSummary: (params: any) => api.get('/report/summary', { params }),
+  getList: (params: any) => api.get('/report/list', { params }),
+  getCharts: (params: any) => api.get('/report/charts', { params }),
+};
+
+export const invoiceAPI = {
+  createInvoice: (data: any) => api.post('/invoice/create', data),
+  getAllInvoices: (params?: any) => api.get('/invoice/all', { params }),
+  updateInvoice: (invoiceId: string, data: any) => api.put(`/invoice/update/${invoiceId}`, data),
+  markAsPaid: (invoiceId: string, data: any) => api.put(`/invoice/mark-paid/${invoiceId}`, data),
+  deleteInvoice: (invoiceId: string) => api.delete(`/invoice/delete/${invoiceId}`),
+  getUpcomingAlerts: () => api.get('/invoice/upcoming-alerts'),
 };
 
 export default api;

@@ -1,5 +1,5 @@
 import React from 'react';
-import Barcode from 'react-barcode-generator';
+import Barcode from 'react-barcode';
 
 interface BarcodeComponentProps {
   value: string;

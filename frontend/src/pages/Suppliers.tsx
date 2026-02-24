@@ -11,6 +11,10 @@ interface Supplier {
   email?: string;
   phone?: string;
   address?: string;
+  vatId?: string;
+  taxId?: string;
+  ibanNumber?: string;
+  gstNumber?: string;
 }
 
 const Suppliers: React.FC = () => {
@@ -18,7 +22,7 @@ const Suppliers: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewingSupplier, setViewingSupplier] = useState<Supplier | null>(null);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [formData, setFormData] = useState({ supplierName: '', contactPerson: '', email: '', phone: '', address: '' });
+  const [formData, setFormData] = useState({ supplierName: '', contactPerson: '', email: '', phone: '', address: '', vatId: '', taxId: '', ibanNumber: '', gstNumber: '' });
   const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
@@ -74,10 +78,20 @@ const Suppliers: React.FC = () => {
   const openModal = (supplier?: Supplier) => {
     if (supplier) {
       setEditingSupplier(supplier);
-      setFormData({ supplierName: supplier.supplierName, contactPerson: supplier.contactPerson || '', email: supplier.email || '', phone: supplier.phone || '', address: supplier.address || '' });
+      setFormData({ 
+        supplierName: supplier.supplierName, 
+        contactPerson: supplier.contactPerson || '', 
+        email: supplier.email || '', 
+        phone: supplier.phone || '', 
+        address: supplier.address || '',
+        vatId: supplier.vatId || '',
+        taxId: supplier.taxId || '',
+        ibanNumber: supplier.ibanNumber || '',
+        gstNumber: supplier.gstNumber || ''
+      });
     } else {
       setEditingSupplier(null);
-      setFormData({ supplierName: '', contactPerson: '', email: '', phone: '', address: '' });
+      setFormData({ supplierName: '', contactPerson: '', email: '', phone: '', address: '', vatId: '', taxId: '', ibanNumber: '', gstNumber: '' });
     }
     setIsModalOpen(true);
   };
@@ -85,7 +99,7 @@ const Suppliers: React.FC = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingSupplier(null);
-    setFormData({ supplierName: '', contactPerson: '', email: '', phone: '', address: '' });
+    setFormData({ supplierName: '', contactPerson: '', email: '', phone: '', address: '', vatId: '', taxId: '', ibanNumber: '', gstNumber: '' });
   };
 
   return (
@@ -114,6 +128,7 @@ const Suppliers: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact Person</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">VAT ID</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
@@ -124,6 +139,7 @@ const Suppliers: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-gray-600">{supplier.contactPerson || '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{supplier.email || '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{supplier.phone || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{supplier.vatId || '-'}</td>
                     <td className="px-6 py-4 text-sm text-right">
                       <div className="flex justify-end gap-2">
                         <button onClick={() => setViewingSupplier(supplier)} className="text-green-600 hover:text-green-800 inline-flex items-center">
@@ -175,6 +191,22 @@ const Suppliers: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-500 mb-1">Address</label>
                 <p className="text-gray-900">{viewingSupplier.address || '-'}</p>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">VAT ID</label>
+                <p className="text-gray-900">{viewingSupplier.vatId || '-'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">Tax ID</label>
+                <p className="text-gray-900">{viewingSupplier.taxId || '-'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">IBAN Number</label>
+                <p className="text-gray-900">{viewingSupplier.ibanNumber || '-'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">GST Number</label>
+                <p className="text-gray-900">{viewingSupplier.gstNumber || '-'}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -182,7 +214,7 @@ const Suppliers: React.FC = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">{editingSupplier ? 'Edit Supplier' : 'Add Supplier'}</h2>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
@@ -190,21 +222,37 @@ const Suppliers: React.FC = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Supplier Name *</label>
-                <input type="text" required value={formData.supplierName} onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
-                <input type="text" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Supplier Name *</label>
+                  <input type="text" required value={formData.supplierName} onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+                  <input type="text" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">VAT ID</label>
+                  <input type="text" value={formData.vatId} onChange={(e) => setFormData({ ...formData, vatId: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tax ID</label>
+                  <input type="text" value={formData.taxId} onChange={(e) => setFormData({ ...formData, taxId: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">IBAN Number</label>
+                  <input type="text" value={formData.ibanNumber} onChange={(e) => setFormData({ ...formData, ibanNumber: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+                </div>
+                <div>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
