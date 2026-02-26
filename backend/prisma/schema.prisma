@@ -7,21 +7,34 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+enum qtyType{
+  gram
+  milliliter
+  kilogram
+  milligram
+  liter
+  packet
+  box
+  carton
+  bottle
+  can
+}
 
 model User {
-  userId            String         @id @default(uuid()) @map("user_id") @db.Uuid
-  fullName          String         @map("full_name") @db.VarChar(150)
-  email             String         @unique @db.VarChar(150)
-  phone             String?        @db.VarChar(20)
+  userId            String           @id @default(uuid()) @map("user_id") @db.Uuid
+  fullName          String           @map("full_name") @db.VarChar(150)
+  email             String           @unique @db.VarChar(150)
+  phone             String?          @db.VarChar(20)
   password          String
-  role              UserType       @default(staff)
-  firstLogin        Boolean        @default(true) @map("first_login")
-  isActive          Boolean        @default(true) @map("is_active")
-  emailNotification Boolean        @default(false) @map("email_notification")
-  locationIds       String[]       @map("location_ids") @db.Uuid
-  createdAt         DateTime       @default(now()) @map("created_at")
-  updatedAt         DateTime       @updatedAt @map("updated_at")
+  role              UserType         @default(staff)
+  firstLogin        Boolean          @default(true) @map("first_login")
+  isActive          Boolean          @default(true) @map("is_active")
+  emailNotification Boolean          @default(false) @map("email_notification")
+  locationIds       String[]         @map("location_ids") @db.Uuid
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
   UserLocation      UserLocation[]
+  transactions      TransactionLog[]
 
   @@map("users")
 }
@@ -53,11 +66,9 @@ model SupplierMaster {
   vatId         String?          @map("vat_id") @db.VarChar(50)
   taxId         String?          @map("tax_id") @db.VarChar(50)
   ibanNumber    String?          @map("iban_number") @db.VarChar(50)
-  gstNumber     String?          @map("gst_number") @db.VarChar(50)
   createdAt     DateTime         @default(now()) @map("created_at")
   updatedAt     DateTime         @updatedAt @map("updated_at")
   items         ItemMaster[]
-  purchases     PurchaseMaster[]
 
   @@map("supplier_master")
 }
@@ -101,11 +112,17 @@ model ItemMaster {
   totalAmount   Decimal?         @map("total_amount") @db.Decimal(10, 2)
   createdAt     DateTime         @default(now()) @map("created_at")
   updatedAt     DateTime         @updatedAt @map("updated_at")
+  rol              Decimal         @db.Decimal(10, 2)
+  moq              Decimal?        @db.Decimal(10, 2)
+  eoq              Decimal?        @db.Decimal(10, 2)
+  quantityType     qtyType          @default(gram)@map("quantity_type")
+  defaultIncrease   Decimal         @db.Decimal(10, 2)@default(1)@map("default_increase")
+  defaultDecrease   Decimal         @db.Decimal(10, 2)@default(1)@map("default_decrease")
+  lastPurchaseDate DateTime?       @map("last_purchase_date")
   location      Location         @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
   supplier      SupplierMaster?  @relation(fields: [supplierId], references: [supplierId])
   tax           TaxMaster?       @relation(fields: [taxId], references: [taxId])
   type          TypeMaster?      @relation(fields: [typeId], references: [typeId])
-  purchase      PurchaseMaster?
   alerts        ReorderAlert[]
   transactions  TransactionLog[]
 
@@ -119,38 +136,25 @@ model TransactionLog {
   transactionType TransactionType @map("transaction_type")
   quantity        Decimal         @db.Decimal(10, 2)
   remainingQty    Decimal         @map("remaining_qty") @db.Decimal(10, 2)
+  takenById       String?         @map("taken_by_id") @db.Uuid
   takenBy         String?         @map("taken_by")
+  quantityType    qtyType         @default(gram) @map("quantity_type")
   remarks         String?
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")
   item            ItemMaster      @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
+  user            User?           @relation(fields: [takenById], references: [userId], onDelete: SetNull)
 
   @@map("transaction_log")
 }
 
-model PurchaseMaster {
-  purchaseId       String          @id @default(uuid()) @map("purchase_id") @db.Uuid
-  itemId           String          @unique @map("item_id") @db.Uuid
-  availableQty     Decimal?        @map("available_qty") @db.Decimal(10, 2)
-  rol              Decimal         @db.Decimal(10, 2)
-  moq              Decimal?        @db.Decimal(10, 2)
-  eoq              Decimal?        @db.Decimal(10, 2)
-  lastPurchaseDate DateTime?       @map("last_purchase_date")
-  supplierId       String?         @map("supplier_id") @db.Uuid
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @updatedAt @map("updated_at")
-  item             ItemMaster      @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
-  supplier         SupplierMaster? @relation(fields: [supplierId], references: [supplierId])
-
-  @@map("purchase_master")
-}
 
 model ReorderAlert {
   alertId   String      @id @default(uuid()) @map("alert_id") @db.Uuid
   itemId    String      @map("item_id") @db.Uuid
   alertType AlertType   @map("alert_type")
   status    AlertStatus @default(pending)
-  alertDate DateTime    @default(now()) @map("alert_date")
+  createdAt DateTime    @default(now()) @map("alert_date")
   updatedAt DateTime    @updatedAt @map("updated_at")
   item      ItemMaster  @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
 
@@ -197,6 +201,7 @@ enum UserType {
   admin
   manager
   staff
+  analyzer
 }
 
 enum TransactionType {

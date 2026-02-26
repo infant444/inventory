@@ -4,15 +4,19 @@ import { prisma } from "../lib/prisma";
 export class SupplierController {
     static async createSupplier(req: Request, res: Response, next: NextFunction) {
         try {
-            const { supplierName, address, email, phone, contactPerson, gstNumber } = req.body
+            const { supplierName, address, email, phone, contactPerson,vatId,taxId,ibanNumber } = req.body
             const supplier = await prisma.supplierMaster.create({
                 data: {
                     supplierName: supplierName,
                     address: address,
                     contactPerson: contactPerson,
                     phone: phone,
-                    email: email,
-                    gstNumber: gstNumber
+                    email: email
+                    ,vatId,
+                    taxId,
+                    ibanNumber 
+
+
                 }
             })
             res.json(supplier)
@@ -44,7 +48,7 @@ export class SupplierController {
     static async updateSupplier(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.supplierId
-            const { supplierName, address, email, phone, contactPerson, gstNumber } = req.body
+            const { supplierName, address, email, phone, contactPerson, vatId, taxId, ibanNumber } = req.body
             const supplier = await prisma.supplierMaster.update({
                 where: {
                     supplierId: id
@@ -55,9 +59,12 @@ export class SupplierController {
                     contactPerson: contactPerson,
                     phone: phone,
                     email: email,
-                    gstNumber: gstNumber
+                    vatId,
+                    taxId,
+                    ibanNumber
                 }
             });
+            res.json(supplier);
         } catch (error) {
             next(error)
         }

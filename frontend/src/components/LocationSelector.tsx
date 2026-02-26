@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Check } from 'lucide-react';
 import { locationAPI } from '../services/api';
 import { useLocation } from '../context/LocationContext';
+import { useAuth } from '../context/AuthContext';
 
 interface Location {
   locationId: string;
@@ -17,6 +18,7 @@ const LocationSelector: React.FC = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const { setSelectedLocation } = useLocation();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchLocations();
@@ -24,8 +26,13 @@ const LocationSelector: React.FC = () => {
 
   const fetchLocations = async () => {
     try {
-      const response = await locationAPI.getAllLocation();
-      setLocations(response.data.data || response.data);
+      const response = await locationAPI.getUserLocation();
+      const userLocations = response.data;
+      setLocations(userLocations);
+      
+      if (userLocations.length === 1) {
+        setSelectedLocation(userLocations[0]);
+      }
     } catch (error) {
       console.error('Error fetching locations:', error);
     } finally {

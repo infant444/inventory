@@ -4,7 +4,20 @@ import { prisma } from "../lib/prisma";
 export class ItemController {
     static async addItem(req: Request, res: Response, next: NextFunction) {
         try {
-            const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent, rol, moq, eoq } = req.body;
+            const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent, rol, moq, eoq,quantityType,defaultIncrease,defaultDecrease } = req.body;
+            
+            const existingItem = await prisma.itemMaster.findFirst({
+                where: {
+                    itemCode: item_code,
+                    locationId: location_id
+                }
+            });
+
+            if (existingItem) {
+                res.status(400).json({ message: "Item code already exists in this location" });
+                return;
+            }
+
             const total_amount = purchase_price + ((purchase_price * tax_percent) / 100);
             const item = await prisma.itemMaster.create({
                 data: {
@@ -19,16 +32,13 @@ export class ItemController {
                     taxId: tax_id,
                     purchasePrice: purchase_price,
                     taxPercent: tax_percent,
-                    totalAmount: total_amount
-                }
-            })
-            const item_config = await prisma.purchaseMaster.create({
-                data: {
+                    totalAmount: total_amount,
                     rol: rol,
                     moq: moq,
                     eoq: eoq,
-                    itemId: item.itemId,
-                    availableQty: opening_qty,
+                    quantityType,
+                    defaultIncrease,
+                    defaultDecrease
                 }
             })
             res.status(201).json({ item });
@@ -51,7 +61,7 @@ export class ItemController {
                     location: true,
                     supplier: true,
                     type: true,
-                    tax: true,
+                    tax: true
                 }
             })
             res.status(200).json(items)
@@ -76,10 +86,11 @@ export class ItemController {
                     location: true,
                     supplier: true,
                     type: true,
-                    tax: true,
+                    tax: true
                 }
 
             })
+            console.log(items)
             res.status(200).json(items)
         } catch (err) {
             next(err)
@@ -103,7 +114,7 @@ export class ItemController {
                     location: true,
                     supplier: true,
                     type: true,
-                    tax: true,
+                    tax: true
                 }
             })
             res.status(200).json(item)
@@ -129,7 +140,7 @@ export class ItemController {
                     location: true,
                     supplier: true,
                     type: true,
-                    tax: true,
+                    tax: true
                 }
             })
             res.status(200).json(item)
@@ -141,6 +152,8 @@ export class ItemController {
         try {
             const id = req.params.itemId;
             const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent } = req.body;
+             const { rol, moq, eoq,defaultDecrease,defaultIncrease,quantityType } = req.body;
+
             const total_amount = purchase_price + (purchase_price * tax_percent) / 100;
             const item = await prisma.itemMaster.update({
                 where: {
@@ -157,7 +170,13 @@ export class ItemController {
                     taxId: tax_id,
                     purchasePrice: purchase_price,
                     taxPercent: tax_percent,
-                    totalAmount: total_amount
+                    totalAmount: total_amount,
+                    rol: rol,
+                    moq: moq,
+                    eoq: eoq,
+                    quantityType,
+                    defaultIncrease,
+                    defaultDecrease
                 }
             })
             res.status(200).json(item)
@@ -180,38 +199,7 @@ export class ItemController {
         }
     }
 
-    // Product Config
-    static async getItemConfig(req: any, res: Response, next: NextFunction) {
-        try {
-            const items = await prisma.purchaseMaster.findMany({
-                where: {
-                    itemId: req.params.itemId
-                }
-            })
-            res.status(200).json(items)
-        } catch (err) {
-            next(err)
-        }
-    }
-       static async updateItemConfig(req: any, res: Response, next: NextFunction) {
-        try {
-            const id = req.params.itemsId;
-            const { rol, moq, eoq } = req.body;
-            const item = await prisma.purchaseMaster.update({
-                where: {
-                    itemId: id
-                },
-                data: {
-                    rol: rol,
-                    moq: moq,
-                    eoq: eoq,
-                }
-            })
-            res.status(200).json(item)
-        } catch (err) {
-            next(err)
-        }
-    }
+
 
 
 }

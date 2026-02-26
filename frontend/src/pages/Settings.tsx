@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, MapPin, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -153,7 +154,7 @@ const Settings: React.FC = () => {
       </div>
 
       {/* Notifications Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      {user?.role!='staff'&&<div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center gap-3 mb-4">
           <Mail className="w-5 h-5 text-gray-600" />
           <h2 className="text-lg font-semibold text-gray-900">Notifications</h2>
@@ -176,7 +177,7 @@ const Settings: React.FC = () => {
             />
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* Change Password Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">

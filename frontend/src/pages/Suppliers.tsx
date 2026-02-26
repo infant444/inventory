@@ -14,7 +14,6 @@ interface Supplier {
   vatId?: string;
   taxId?: string;
   ibanNumber?: string;
-  gstNumber?: string;
 }
 
 const Suppliers: React.FC = () => {
@@ -22,7 +21,7 @@ const Suppliers: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewingSupplier, setViewingSupplier] = useState<Supplier | null>(null);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [formData, setFormData] = useState({ supplierName: '', contactPerson: '', email: '', phone: '', address: '', vatId: '', taxId: '', ibanNumber: '', gstNumber: '' });
+  const [formData, setFormData] = useState({ supplierName: '', contactPerson: '', email: '', phone: '', address: '', vatId: '', taxId: '', ibanNumber: '' });
   const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
@@ -86,12 +85,11 @@ const Suppliers: React.FC = () => {
         address: supplier.address || '',
         vatId: supplier.vatId || '',
         taxId: supplier.taxId || '',
-        ibanNumber: supplier.ibanNumber || '',
-        gstNumber: supplier.gstNumber || ''
+        ibanNumber: supplier.ibanNumber || ''
       });
     } else {
       setEditingSupplier(null);
-      setFormData({ supplierName: '', contactPerson: '', email: '', phone: '', address: '', vatId: '', taxId: '', ibanNumber: '', gstNumber: '' });
+      setFormData({ supplierName: '', contactPerson: '', email: '', phone: '', address: '', vatId: '', taxId: '', ibanNumber: '' });
     }
     setIsModalOpen(true);
   };
@@ -99,7 +97,7 @@ const Suppliers: React.FC = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingSupplier(null);
-    setFormData({ supplierName: '', contactPerson: '', email: '', phone: '', address: '', vatId: '', taxId: '', ibanNumber: '', gstNumber: '' });
+    setFormData({ supplierName: '', contactPerson: '', email: '', phone: '', address: '', vatId: '', taxId: '', ibanNumber: '' });
   };
 
   return (
@@ -202,10 +200,6 @@ const Suppliers: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1">IBAN Number</label>
                 <p className="text-gray-900">{viewingSupplier.ibanNumber || '-'}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">GST Number</label>
-                <p className="text-gray-900">{viewingSupplier.gstNumber || '-'}</p>
               </div>
             </div>
           </div>

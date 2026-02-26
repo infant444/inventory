@@ -9,7 +9,7 @@ interface User {
   full_name: string;
   email: string;
   phone: string;
-  role: 'admin' | 'manager' | 'staff';
+  role: 'admin' | 'manager' | 'staff' | 'analyzer';
   is_active: boolean;
   email_notification: boolean;
   location_ids: string[];
@@ -44,15 +44,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
+    const token = localStorage.getItem('inventory-token');
+    const userData = localStorage.getItem('inventory-user');
     
     if (token && userData) {
       try {
         setUser(JSON.parse(userData));
       } catch (error) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        localStorage.removeItem('inventory-token');
+        localStorage.removeItem('inventory-user');
       }
     }
     setLoading(false);
@@ -60,15 +60,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = (userData: User) => {
     setUser(userData);
-    localStorage.setItem('token', userData.token);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('inventory-token', userData.token);
+    localStorage.setItem('inventory-user', JSON.stringify(userData));
   };
 
   const logout = async() => {
     setUser(null);
    await authAPI.logout();
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem('inventory-token');
+    localStorage.removeItem('inventory-user');
   };
 
   const value = {

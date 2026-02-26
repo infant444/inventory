@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
-// const API_BASE_URL = 'https://inventory-z6w5.onrender.com/api';
+// const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://inventory-z6w5.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -13,7 +13,7 @@ const api = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('inventory-token');
   const selectedLocation = localStorage.getItem('selectedLocation');
   if (token) {
     config.headers.access_token = token;
@@ -30,8 +30,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      localStorage.removeItem('inventory-token');
+      localStorage.removeItem('inventory-user');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -120,6 +120,10 @@ export const reportAPI = {
   getSummary: (params: any) => api.get('/report/summary', { params }),
   getList: (params: any) => api.get('/report/list', { params }),
   getCharts: (params: any) => api.get('/report/charts', { params }),
+  getItemAnalysis: () => api.get('/report/item-analysis'),
+  getROLRecommendations: () => api.get('/report/rol-recommendations'),
+  getSupplierPriceAnalysis: () => api.get('/report/supplier-price-analysis'),
+  getStockReport: (params?: any) => api.get('/report/stock-report', { params }),
 };
 
 export const invoiceAPI = {

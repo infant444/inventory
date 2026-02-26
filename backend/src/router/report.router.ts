@@ -10,5 +10,9 @@ route.use(authMiddleware);
 route.get("/summary", asyncHandler(ReportController.getSummary));
 route.get("/list", asyncHandler(ReportController.getList));
 route.get("/charts", asyncHandler(ReportController.getCharts));
+route.get("/item-analysis", asyncHandler(ReportController.getItemAnalysis));
+route.get("/rol-recommendations", asyncHandler(ReportController.getROLRecommendations));
+route.get("/supplier-price-analysis", asyncHandler(ReportController.getSupplierPriceAnalysis));
+route.get("/stock-report", asyncHandler(ReportController.getStockReport));
 
 export default route;

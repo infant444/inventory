@@ -12,7 +12,7 @@ import BarcodeScanner from '../components/BarcodeScanner';
 const CheckInOut: React.FC = () => {
   const [searchValue, setSearchValue] = useState('');
   const [transactionType, setTransactionType] = useState<'checkin' | 'checkout'>('checkin');
-  const [batchMode, setBatchMode] = useState(false);
+  const [batchMode, setBatchMode] = useState(true);
   const [scannedItems, setScannedItems] = useState<any[]>([]);
   const [showScanner, setShowScanner] = useState(false);
   const [showBill, setShowBill] = useState(false);
@@ -78,17 +78,21 @@ const CheckInOut: React.FC = () => {
   };
 
   const addItemToBatch = (item: any) => {
+    const defaultValue = transactionType === 'checkin' 
+      ? item.defaultIncrease 
+      : item.defaultDecrease;
+    
     const existing = scannedItems.find(i => i.itemId === item.itemId);
     if (existing) {
       setScannedItems(scannedItems.map(i => 
         i.itemId === item.itemId 
-          ? { ...i, quantity: i.quantity + 1 }
+          ? { ...i, quantity: i.quantity + parseFloat(defaultValue || '1') }
           : i
       ));
     } else {
       setScannedItems([...scannedItems, { 
         ...item, 
-        quantity: 1, 
+        quantity: parseFloat(defaultValue || '1'), 
         price: item.purchasePrice,
         notes: ''
       }]);
@@ -124,6 +128,7 @@ const CheckInOut: React.FC = () => {
       const items = scannedItems.map(item => ({
         item_id: item.itemId,
         quantity: Number(item.quantity),
+        quantityType: item.quantityType,
         price: Number(item.price),
         notes: item.notes
       }));
@@ -144,6 +149,7 @@ const CheckInOut: React.FC = () => {
         errors: response.data.errors || [],
         totalAmount,
         transactionType,
+        
         user: user?.full_name,
         location: selectedLocation?.locationName,
         timestamp: new Date().toLocaleString()
@@ -181,7 +187,10 @@ const CheckInOut: React.FC = () => {
         <div className="flex items-center justify-center">
           <div className="inline-flex rounded-lg border-2 border-gray-200 p-1">
             <button
-              onClick={() => setTransactionType('checkin')}
+              onClick={() => {setTransactionType('checkin')
+                setScannedItems([])
+
+              }}
               className={`px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                 transactionType === 'checkin'
                   ? 'bg-green-500 text-white shadow-md'
@@ -192,7 +201,9 @@ const CheckInOut: React.FC = () => {
               Check In
             </button>
             <button
-              onClick={() => setTransactionType('checkout')}
+              onClick={() =>{ setTransactionType('checkout')
+                setScannedItems([])
+              }}
               className={`px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                 transactionType === 'checkout'
                   ? 'bg-red-500 text-white shadow-md'
@@ -248,6 +259,7 @@ const CheckInOut: React.FC = () => {
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder="Enter Item Code or Barcode"
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoFocus
               />
               <button
                 onClick={() => setShowScanner(true)}
@@ -294,7 +306,7 @@ const CheckInOut: React.FC = () => {
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{item.itemName}</h3>
                       <p className="text-sm text-gray-600">{item.itemCode}</p>
-                      <p className="text-xs text-gray-500">Stock: {item.currentQty}</p>
+                      <p className="text-xs text-gray-500">Stock: {item.currentQty} {item.quantityType || 'unit'}</p>
                     </div>
                     <button
                       onClick={() => removeItem(item.itemId)}
@@ -303,16 +315,23 @@ const CheckInOut: React.FC = () => {
                       <Trash2 size={18} />
                     </button>
                   </div>
-                  <div className="grid grid-cols-1 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-gray-600">Quantity</label>
+                      <label className="text-xs text-gray-600">Quantity ({item.quantityType || 'unit'})</label>
                       <input
                         type="number"
                         value={item.quantity}
                         onChange={(e) => updateItemQuantity(item.itemId, Number(e.target.value))}
-                        min="1"
+                        min="0.01"
+                        step="0.01"
                         className="w-full px-2 py-1 border rounded text-sm"
                       />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-600">Current Stock</label>
+                      <div className="px-2 py-1 bg-gray-100 rounded text-sm font-medium">
+                        {item.currentQty} {item.quantityType || 'unit'}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -345,7 +364,7 @@ const CheckInOut: React.FC = () => {
                 <X size={24} />
               </button>
             </div>
-            <BarcodeScanner onScan={handleScan} />
+            {/* <BarcodeScanner onScan={handleScan} /> */}
           </div>
         </div>
       )}

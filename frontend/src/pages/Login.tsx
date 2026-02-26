@@ -33,7 +33,14 @@ const Login: React.FC = () => {
         login(userData);
       } else {
         login(userData);
-        navigate('/dashboard');
+        const role = userData.role;
+        if (role === 'staff') {
+          navigate('/dashboard/checkin-checkout');
+        } else if (role === 'analyzer') {
+          navigate('/dashboard/reports');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
@@ -44,7 +51,20 @@ const Login: React.FC = () => {
 
   const handlePasswordResetSuccess = () => {
     setShowPasswordReset(false);
-    navigate('/dashboard');
+    const storedUser = localStorage.getItem('inventory-user');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      const role = userData.role;
+      if (role === 'staff') {
+        navigate('/dashboard/checkin-checkout');
+      } else if (role === 'analyzer') {
+        navigate('/dashboard/reports');
+      } else {
+        navigate('/dashboard');
+      }
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   return (

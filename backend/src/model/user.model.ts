@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "manager" | "staff";
+export type UserRole = "admin" | "manager" | "staff"|"analyzer";
 export type UserType = UserRole; // Alias for Prisma compatibility
 
 export class User {

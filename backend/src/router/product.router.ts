@@ -17,5 +17,4 @@ route.delete("/delete/:itemId", asyncHandler(ItemController.deleteItem));
 
 // product config
 route.get("/config/:itemId", asyncHandler(ItemController.getItemById));
-route.put("/config/update/:itemId", asyncHandler(ItemController.updateItemConfig));
 export default route;

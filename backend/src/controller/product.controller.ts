@@ -4,7 +4,7 @@ import { prisma } from "../lib/prisma";
 export class ProductController {
     static async checkIn(req: any, res: Response, next: NextFunction) {
         try {
-            const { item_id, quantity, price, notes } = req.body;
+            const { item_id, quantity, price, notes ,quantityType} = req.body;
             const locationId = req.headers.location_id;
             const userId = req.user.id;
 
@@ -35,6 +35,7 @@ export class ProductController {
                         itemId: item_id,
                         transactionType: 'checkin',
                         quantity: quantity,
+                        quantityType,
                         remainingQty: newQty,
                         takenBy: userId,
                         remarks: notes || null
@@ -52,7 +53,7 @@ export class ProductController {
 
     static async checkOut(req: any, res: Response, next: NextFunction) {
         try {
-            const { item_id, quantity, price, notes } = req.body;
+            const { item_id, quantity, price, notes,quantityType } = req.body;
             const locationId = req.headers.location_id;
             const userId = req.user.id;
 
@@ -87,6 +88,7 @@ export class ProductController {
                         itemId: item_id,
                         transactionType: 'checkout',
                         quantity: quantity,
+                        quantityType,
                         remainingQty: newQty,
                         takenBy: userId,
                         remarks: notes || null
@@ -114,7 +116,7 @@ export class ProductController {
             }
 
             const results = await prisma.$transaction(async (tx) => {
-                const processedItems = [];
+                const processedItems: any[] = [];
 
                 for (const itemData of items) {
                     const item = await tx.itemMaster.findFirst({
@@ -136,6 +138,7 @@ export class ProductController {
                             itemId: itemData.item_id,
                             transactionType: 'checkin',
                             quantity: itemData.quantity,
+                            quantityType: itemData.quantityType || 'gram',
                             remainingQty: newQty,
                             takenBy: userId,
                             remarks: itemData.notes || null
@@ -166,8 +169,8 @@ export class ProductController {
             }
 
             const results = await prisma.$transaction(async (tx) => {
-                const processedItems = [];
-                const errors = [];
+                const processedItems: any[] = [];
+                const errors: any[] = [];
 
                 for (const itemData of items) {
                     const item = await tx.itemMaster.findFirst({
@@ -197,6 +200,7 @@ export class ProductController {
                             itemId: itemData.item_id,
                             transactionType: 'checkout',
                             quantity: itemData.quantity,
+                            quantityType: itemData.quantityType || 'gram',
                             remainingQty: newQty,
                             takenBy: userId,
                             remarks: itemData.notes || null

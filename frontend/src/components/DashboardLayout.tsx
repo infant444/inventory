@@ -68,17 +68,17 @@ const DashboardLayout: React.FC = () => {
   };
 
   const menuItems = [
-    { icon: Home, label: 'Dashboard', path: '/dashboard', roles: ['admin', 'manager', 'staff'] },
-    { icon: Package, label: 'Items', path: '/dashboard/items', roles: ['admin', 'manager', 'staff'] },
-    { icon: ArrowLeftRight, label: 'Check-In/Out', path: '/dashboard/checkin-checkout', roles: ['admin', 'manager', 'staff'] },
-    { icon: CreditCard, label: 'Payment Tracker', path: '/dashboard/payment-tracker', roles: ['admin', 'manager', 'staff'] },
-    { icon: FileText, label: 'Reports', path: '/dashboard/reports', roles: ['admin', 'manager', 'staff'] },
-    { icon: MapPin, label: 'Locations', path: '/dashboard/locations', roles: ['admin'] },
-    { icon: Users, label: 'Users', path: '/dashboard/users', roles: ['admin'] },
-    { icon: Truck, label: 'Suppliers', path: '/dashboard/suppliers', roles: ['admin', 'manager'] },
-    { icon: Tags, label: 'Categories', path: '/dashboard/categories', roles: ['admin', 'manager'] },
-    { icon: Calculator, label: 'Tax Settings', path: '/dashboard/tax', roles: ['admin'] },
-    { icon: SettingsIcon, label: 'Settings', path: '/dashboard/settings', roles: ['admin', 'manager', 'staff'] },
+    { icon: Home, label: 'Dashboard', path: '/dashboard', roles: ['admin', 'manager',] },
+    { icon: Package, label: 'Items', path: '/items', roles: ['admin', 'manager',] },
+    { icon: ArrowLeftRight, label: 'Check-In/Out', path: '/checkin-checkout', roles: ['admin', 'staff'] },
+    { icon: CreditCard, label: 'Payment Tracker', path: '/payment-tracker', roles: ['admin', 'manager','analyzer'] },
+    { icon: FileText, label: 'Reports', path: '/reports', roles: ['admin', 'manager','analyzer'] },
+    { icon: MapPin, label: 'Locations', path: '/locations', roles: ['admin'] },
+    { icon: Users, label: 'Users', path: '/users', roles: ['admin'] },
+    { icon: Truck, label: 'Suppliers', path: '/suppliers', roles: ['admin', 'manager'] },
+    { icon: Tags, label: 'Categories', path: '/categories', roles: ['admin', 'manager'] },
+    { icon: Calculator, label: 'Tax Settings', path: '/tax', roles: ['admin'] },
+    { icon: SettingsIcon, label: 'Settings', path: '/settings', roles: ['admin', 'manager', 'staff','analyzer'] },
   ];
 
   const filteredMenuItems = menuItems.filter(item => 

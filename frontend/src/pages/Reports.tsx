@@ -1,32 +1,56 @@
+/* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { Download, FileText, Printer, TrendingUp, TrendingDown, IndianRupee, Package, Calendar } from 'lucide-react';
-import { reportAPI, supplierAPI, itemAPI } from '../services/api';
+import { Download, Printer, TrendingUp, TrendingDown, IndianRupee, Package, Calendar, FileText, AlertTriangle, Flame, Snowflake, DollarSign } from 'lucide-react';
+import { reportAPI, supplierAPI, categoriesAPI } from '../services/api';
 import { useLoading } from '../context/LoadingContext';
 import { toast } from 'react-toastify';
 
 const Reports: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('transactions');
   const [dateFilter, setDateFilter] = useState('today');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [supplierId, setSupplierId] = useState('');
-  const [itemId, setItemId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [suppliers, setSuppliers] = useState<any[]>([]);
-  const [items, setItems] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [charts, setCharts] = useState<any>(null);
+  const [stockReport, setStockReport] = useState<any[]>([]);
+  const [rolReport, setRolReport] = useState<any[]>([]);
+  const [highConsumption, setHighConsumption] = useState<any[]>([]);
+  const [lowConsumption, setLowConsumption] = useState<any[]>([]);
+  const [priceComparison, setPriceComparison] = useState<any[]>([]);
+  const [seasonalAnalysis, setSeasonalAnalysis] = useState<any[]>([]);
+  const [seasonalMonth, setSeasonalMonth] = useState('');
+  const [seasonalCategory, setSeasonalCategory] = useState('');
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, totalPages: 0 });
   const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
     fetchSuppliers();
-    fetchItems();
+    fetchCategories();
   }, []);
 
   useEffect(() => {
-    fetchReports();
-  }, [dateFilter, pagination.page, supplierId, itemId]);
+    if (activeTab === 'transactions') {
+      fetchReports();
+    } else if (activeTab === 'stock') {
+      fetchStockReport();
+    } else if (activeTab === 'rol') {
+      fetchRolReport();
+    } else if (activeTab === 'high') {
+      fetchHighConsumption();
+    } else if (activeTab === 'low') {
+      fetchLowConsumption();
+    } else if (activeTab === 'price') {
+      fetchPriceComparison();
+    } else if (activeTab === 'seasonal') {
+      fetchSeasonalAnalysis();
+    }
+  }, [activeTab, dateFilter, pagination.page, supplierId, categoryId, seasonalMonth, seasonalCategory]);
 
   const fetchSuppliers = async () => {
     try {
@@ -37,12 +61,12 @@ const Reports: React.FC = () => {
     }
   };
 
-  const fetchItems = async () => {
+  const fetchCategories = async () => {
     try {
-      const response = await itemAPI.getItems();
-      setItems(response.data);
+      const response = await categoriesAPI.getCategories();
+      setCategories(response.data);
     } catch (error) {
-      console.error('Error fetching items:', error);
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -55,15 +79,31 @@ const Reports: React.FC = () => {
         startDate = new Date(now.setHours(0, 0, 0, 0));
         endDate = new Date(now.setHours(23, 59, 59, 999));
         break;
-      case 'week':
+      case 'yesterday':
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        startDate = new Date(yesterday.setHours(0, 0, 0, 0));
+        endDate = new Date(yesterday.setHours(23, 59, 59, 999));
+        break;
+      case 'last7days':
         startDate = new Date(now.setDate(now.getDate() - 7));
         endDate = new Date();
         break;
-      case 'month':
+      case 'last30days':
         startDate = new Date(now.setDate(now.getDate() - 30));
         endDate = new Date();
         break;
-      case 'year':
+      case 'thisweek':
+        const firstDay = now.getDate() - now.getDay();
+        startDate = new Date(now.setDate(firstDay));
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date();
+        break;
+      case 'thismonth':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date();
+        break;
+      case 'thisyear':
         startDate = new Date(now.getFullYear(), 0, 1);
         endDate = new Date();
         break;
@@ -90,7 +130,7 @@ const Reports: React.FC = () => {
       const params: any = { startDate, endDate, page: pagination.page, limit: pagination.limit };
       
       if (supplierId) params.supplierId = supplierId;
-      if (itemId) params.itemId = itemId;
+      if (categoryId) params.categoryId = categoryId;
 
       const [summaryRes, listRes, chartsRes] = await Promise.all([
         reportAPI.getSummary(params),
@@ -109,6 +149,112 @@ const Reports: React.FC = () => {
     }
   };
 
+  const fetchStockReport = async () => {
+    showLoading('Loading stock report...');
+    try {
+      const params: any = {};
+      if (supplierId) params.supplierId = supplierId;
+      if (categoryId) params.categoryId = categoryId;
+      const response = await reportAPI.getStockReport(params);
+      setStockReport(response.data);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const fetchRolReport = async () => {
+    showLoading('Loading ROL recommendations...');
+    try {
+      const response = await reportAPI.getROLRecommendations();
+      setRolReport(response.data);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const fetchHighConsumption = async () => {
+    showLoading('Loading high consumption...');
+    try {
+      // const { startDate, endDate } = getDateRange();
+      const response = await reportAPI.getItemAnalysis();
+      const sorted = response.data.sort((a: any, b: any) => b.totalCheckOut - a.totalCheckOut).slice(0, 20);
+      setHighConsumption(sorted);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const fetchLowConsumption = async () => {
+    showLoading('Loading low consumption...');
+    try {
+      const response = await reportAPI.getItemAnalysis();
+      const sorted = response.data.sort((a: any, b: any) => a.totalCheckOut - b.totalCheckOut).slice(0, 20);
+      setLowConsumption(sorted);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const fetchPriceComparison = async () => {
+    showLoading('Loading price comparison...');
+    try {
+      const response = await reportAPI.getSupplierPriceAnalysis();
+      setPriceComparison(response.data);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const fetchSeasonalAnalysis = async () => {
+    showLoading('Loading seasonal analysis...');
+    try {
+      const response = await reportAPI.getItemAnalysis();
+      const monthlyData: any = {};
+      
+      response.data.forEach((item: any) => {
+        if (item.lastTransaction) {
+          const month = new Date(item.lastTransaction).getMonth() + 1;
+          
+          // Apply month filter
+          if (seasonalMonth && month !== parseInt(seasonalMonth)) return;
+          
+          // Apply category filter
+          if (seasonalCategory && item.category !== categories.find(c => c.typeId === seasonalCategory)?.typeName) return;
+          
+          const key = `${item.itemId}-${month}`;
+          if (!monthlyData[key]) {
+            monthlyData[key] = {
+              itemCode: item.itemCode,
+              itemName: item.itemName,
+              month: month,
+              monthName: new Date(2024, month - 1).toLocaleString('default', { month: 'long' }),
+              totalCheckOut: item.totalCheckOut,
+              totalCheckIn: item.totalCheckIn,
+              category: item.category,
+              supplier: item.supplier
+            };
+          }
+        }
+      });
+      
+      setSeasonalAnalysis(Object.values(monthlyData));
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load');
+    } finally {
+      hideLoading();
+    }
+  };
+
   const downloadCSV = () => {
     const headers = ['Date', 'Item Name', 'Item Code', 'Type', 'Quantity', 'Price', 'Tax %', 'Tax Amount', 'Total Amount', 'Location', 'User'];
     const rows = transactions.map(t => [
@@ -116,7 +262,7 @@ const Reports: React.FC = () => {
       t.itemName,
       t.itemCode,
       t.type.toUpperCase(),
-      t.quantity,
+      `${t.quantity} ${t.quantityType}`,
       t.price.toFixed(2),
       t.taxPercent,
       t.taxAmount.toFixed(2),
@@ -140,10 +286,10 @@ const Reports: React.FC = () => {
   };
 
   return (
-    <div className="">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6 print:mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Inventory Reports & Analytics</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 print:hidden">
           <button onClick={downloadCSV} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
             <Download size={18} />
             CSV
@@ -155,20 +301,64 @@ const Reports: React.FC = () => {
         </div>
       </div>
 
-      {/* Date Filters */}
+      {/* Report Tabs */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setActiveTab('transactions')} className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'transactions' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            <FileText size={18} />
+            Transactions
+          </button>
+          <button onClick={() => setActiveTab('stock')} className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'stock' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            <Package size={18} />
+            Stock Report
+          </button>
+          <button onClick={() => setActiveTab('rol')} className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'rol' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            <AlertTriangle size={18} />
+            RFQ/RFP (ROL/EOQ)
+          </button>
+          <button onClick={() => setActiveTab('high')} className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'high' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            <Flame size={18} />
+            High Consumption
+          </button>
+          <button onClick={() => setActiveTab('low')} className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'low' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            <Snowflake size={18} />
+            Low Consumption
+          </button>
+          <button onClick={() => setActiveTab('price')} className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'price' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            <DollarSign size={18} />
+            Price Comparison
+          </button>
+          <button onClick={() => setActiveTab('seasonal')} className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'seasonal' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            <Calendar size={18} />
+            Seasonal Analysis
+          </button>
+        </div>
+      </div>
+
+      {/* Date Filters - Only for transactions tab */}
+      {activeTab === 'transactions' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
         <div className="flex flex-wrap gap-2 items-center mb-4">
           <Calendar className="text-gray-500" size={20} />
           <button onClick={() => setDateFilter('today')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'today' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
             Today
           </button>
-          <button onClick={() => setDateFilter('week')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+          <button onClick={() => setDateFilter('yesterday')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'yesterday' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            Yesterday
+          </button>
+          <button onClick={() => setDateFilter('last7days')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'last7days' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
             Last 7 Days
           </button>
-          <button onClick={() => setDateFilter('month')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+          <button onClick={() => setDateFilter('last30days')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'last30days' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
             Last 30 Days
           </button>
-          <button onClick={() => setDateFilter('year')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'year' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+          <button onClick={() => setDateFilter('thisweek')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'thisweek' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            This Week
+          </button>
+          <button onClick={() => setDateFilter('thismonth')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'thismonth' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            This Month
+          </button>
+          <button onClick={() => setDateFilter('thisyear')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'thisyear' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
             This Year
           </button>
           <button onClick={() => setDateFilter('overall')} className={`px-4 py-2 rounded-lg transition-colors ${dateFilter === 'overall' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
@@ -195,22 +385,23 @@ const Reports: React.FC = () => {
               <option key={supplier.supplierId} value={supplier.supplierId}>{supplier.supplierName}</option>
             ))}
           </select>
-          <select value={itemId} onChange={(e) => setItemId(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            <option value="">All Products</option>
-            {items.map((item) => (
-              <option key={item.itemId} value={item.itemId}>{item.itemName} ({item.itemCode})</option>
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <option value="">All Categories</option>
+            {categories.map((category) => (
+              <option key={category.typeId} value={category.typeId}>{category.typeName}</option>
             ))}
           </select>
-          {(supplierId || itemId) && (
-            <button onClick={() => { setSupplierId(''); setItemId(''); }} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+          {(supplierId || categoryId) && (
+            <button onClick={() => { setSupplierId(''); setCategoryId(''); }} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
               Clear Filters
             </button>
           )}
         </div>
       </div>
+      )}
 
-      {/* Summary Cards */}
-      {summary && (
+      {/* Summary Cards - Only for transactions */}
+      {activeTab === 'transactions' && summary && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
@@ -268,8 +459,8 @@ const Reports: React.FC = () => {
         </div>
       )}
 
-      {/* Charts */}
-      {charts && (
+      {/* Charts - Only for transactions */}
+      {activeTab === 'transactions' && charts && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Trend</h3>
@@ -313,6 +504,7 @@ const Reports: React.FC = () => {
       )}
 
       {/* Transactions Table */}
+      {activeTab === 'transactions' && (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Transaction History</h3>
@@ -332,22 +524,31 @@ const Reports: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {transactions.map((t) => (
-                <tr key={t.transactionId} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-600">{new Date(t.date).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{t.itemName}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{t.itemCode}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${t.type === 'checkin' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {t.type.toUpperCase()}
-                    </span>
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                    <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                    <p>No transactions found for the selected filters</p>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{t.quantity}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">₹{t.price.toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{t.taxPercent}%</td>
-                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">₹{t.totalAmount.toFixed(2)}</td>
                 </tr>
-              ))}
+              ) : (
+                transactions.map((t) => (
+                  <tr key={t.transactionId} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-600">{new Date(t.date).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{t.itemName}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{t.itemCode}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-xs rounded-full ${t.type === 'checkin' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {t.type.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{`${String(t.quantity).padStart(3,'0')} ${t.quantityType}`}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">₹{t.price.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{t.taxPercent}%</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">₹{t.totalAmount.toFixed(2)}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -377,6 +578,319 @@ const Reports: React.FC = () => {
           </div>
         )}
       </div>
+      )}
+
+      {/* Stock Report */}
+      {activeTab === 'stock' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Stock Report</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Code</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Qty</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ROL</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">MOQ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">EOQ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {stockReport.map((item: any) => (
+                  <tr key={item.itemCode} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.itemCode}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.itemName}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.currentQty}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.rol}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.moq}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.eoq}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-xs rounded-full ${item.status === 'Low Stock' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.supplier}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.category}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ROL/RFQ Report */}
+      {activeTab === 'rol' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">RFQ/RFP Recommendations (Based on ROL & EOQ)</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Code</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Qty</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ROL</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recommended ROL</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">MOQ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">EOQ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avg Daily Usage</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Days to Stockout</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {rolReport.map((item: any) => (
+                  <tr key={item.itemCode} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.itemCode}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.itemName}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.currentQty}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.currentROL}</td>
+                    <td className="px-6 py-4 text-sm text-blue-600 font-semibold">{item.recommendedROL}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.moq}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.eoq}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.avgDailyUsage}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.daysUntilStockout}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        item.status === 'critical' ? 'bg-red-100 text-red-700' : 
+                        item.status === 'warning' ? 'bg-yellow-100 text-yellow-700' : 
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {item.status.toUpperCase()}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* High Consumption Report */}
+      {activeTab === 'high' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">High Consumption Items</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rank</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Code</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Check-Out</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Check-In</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Turnover Rate</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Qty</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {highConsumption.map((item: any, idx: number) => (
+                  <tr key={item.itemCode} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-bold text-gray-900">{idx + 1}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.itemCode}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.itemName}</td>
+                    <td className="px-6 py-4 text-sm text-red-600 font-semibold">{item.totalCheckOut}</td>
+                    <td className="px-6 py-4 text-sm text-green-600">{item.totalCheckIn}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.turnoverRate}%</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.currentQty}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.supplier}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.category}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Low Consumption Report */}
+      {activeTab === 'low' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Low Consumption Items</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rank</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Code</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Check-Out</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Check-In</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Turnover Rate</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Qty</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {lowConsumption.map((item: any, idx: number) => (
+                  <tr key={item.itemCode} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-bold text-gray-900">{idx + 1}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.itemCode}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.itemName}</td>
+                    <td className="px-6 py-4 text-sm text-blue-600">{item.totalCheckOut}</td>
+                    <td className="px-6 py-4 text-sm text-green-600">{item.totalCheckIn}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.turnoverRate}%</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.currentQty}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.supplier}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.category}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Price Comparison Report */}
+      {activeTab === 'price' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Price Comparison Report (Item-wise / Type-wise)</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Code</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avg Category Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Min Category Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Max Category Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price Diff %</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {priceComparison.map((item: any) => (
+                  <tr key={item.itemCode} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.itemCode}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.itemName}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.category}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.supplier}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 font-semibold">₹{item.price.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">₹{item.avgCategoryPrice}</td>
+                    <td className="px-6 py-4 text-sm text-green-600">₹{item.minCategoryPrice}</td>
+                    <td className="px-6 py-4 text-sm text-red-600">₹{item.maxCategoryPrice}</td>
+                    <td className="px-6 py-4 text-sm font-semibold">
+                      <span className={item.priceDiffPercent > 0 ? 'text-red-600' : 'text-green-600'}>
+                        {item.priceDiffPercent > 0 ? '+' : ''}{item.priceDiffPercent}%
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        item.priceStatus === 'high' ? 'bg-red-100 text-red-700' : 
+                        item.priceStatus === 'low' ? 'bg-green-100 text-green-700' : 
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {item.priceStatus.toUpperCase()}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Seasonal Analysis Report */}
+      {activeTab === 'seasonal' && (
+        <>
+        {/* Seasonal Filters */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+          <div className="flex flex-wrap gap-2 items-center">
+            <select value={seasonalMonth} onChange={(e) => setSeasonalMonth(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+              <option value="">All Months</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+            <select value={seasonalCategory} onChange={(e) => setSeasonalCategory(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+              <option value="">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.typeId} value={category.typeId}>{category.typeName}</option>
+              ))}
+            </select>
+            {(seasonalMonth || seasonalCategory) && (
+              <button onClick={() => { setSeasonalMonth(''); setSeasonalCategory(''); }} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                Clear Filters
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Seasonal Analysis - Monthly Consumption Patterns</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Code</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Month</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Check-Out</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Check-In</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {seasonalAnalysis.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      <Calendar className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                      <p>No seasonal data available</p>
+                    </td>
+                  </tr>
+                ) : (
+                  seasonalAnalysis.map((item: any, idx: number) => (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-900">{item.itemCode}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{item.itemName}</td>
+                      <td className="px-6 py-4 text-sm text-blue-600 font-semibold">{item.monthName}</td>
+                      <td className="px-6 py-4 text-sm text-red-600">{item.totalCheckOut}</td>
+                      <td className="px-6 py-4 text-sm text-green-600">{item.totalCheckIn}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{item.category}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{item.supplier}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        </>
+      )}
     </div>
   );
 };

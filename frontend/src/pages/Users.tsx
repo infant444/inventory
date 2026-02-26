@@ -114,6 +114,7 @@ const UsersPage: React.FC = () => {
         role: "staff",
         location_ids: [],
       });
+      setIsAddModalOpen(false)
       toast.success("Create Successfully...");
 
     } catch (error) {
@@ -482,6 +483,7 @@ const UsersPage: React.FC = () => {
                   <option value="admin">Admin</option>
                   <option value="manager">Manager</option>
                   <option value="staff">Staff</option>
+                  <option value="analyzer">Analyzer</option>
                 </select>
               </div>
               <div>
@@ -652,6 +654,8 @@ const UsersPage: React.FC = () => {
                     <option value="staff">Staff</option>
                     <option value="manager">Manager</option>
                     <option value="admin">Admin</option>
+                  <option value="analyzer">Analyzer</option>
+
                   </select>
                 </div>
                 <div>

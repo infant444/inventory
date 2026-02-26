@@ -14,7 +14,11 @@ export class UserController {
     }
     static async getAll(req: Request, res: Response, next: NextFunction) {
         try {
-            const users = await prisma.user.findMany();
+            const users = await prisma.user.findMany({
+                orderBy:{
+                    role:'asc'
+                }
+            });
             res.json(users);
         } catch (e) {
             next(e);
