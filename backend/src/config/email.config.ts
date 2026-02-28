@@ -6,6 +6,9 @@ export const MailConfig = {
     user: process.env.MAIL!,
     pass: process.env.MAIL_PASS!,
   },
+  tls: {
+    rejectUnauthorized: false
+  }
 };
 export const mailGenerator = new Mailgen({
     theme: 'default',
