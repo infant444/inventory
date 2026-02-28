@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 
-<<<<<<< HEAD
 // const API_BASE_URL = 'http://localhost:5000/api';
 const API_BASE_URL = 'https://inventory-qj08.onrender.com/api';
-=======
-//const API_BASE_URL = 'http://localhost:5000/api';
-const API_BASE_URL = 'https://inventory-z6w5.onrender.com/api';
->>>>>>> 350aeed6a24db2c5db2413c252a447850a355e92
 
 const api = axios.create({
   baseURL: API_BASE_URL,
