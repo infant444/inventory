@@ -5,6 +5,7 @@ export const MailConfig={
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
+    family: 4,
     auth:{
         user:process.env.MAIL!,
         pass:process.env.MAIL_PASS!,
