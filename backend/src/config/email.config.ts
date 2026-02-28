@@ -2,10 +2,18 @@ import Mailgen from "mailgen";
 
 export const MailConfig={
     service:'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth:{
         user:process.env.MAIL!,
         pass:process.env.MAIL_PASS!,
-    }
+    },
+    tls: {
+        rejectUnauthorized: false
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000
 }
 export const mailGenerator = new Mailgen({
     theme: 'default',

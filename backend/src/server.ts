@@ -13,6 +13,7 @@ import ProductRouter from './router/product.router';
 import ProductTransactionRouter from './router/product-transaction.router';
 import ReportRouter from './router/report.router';
 import InvoiceRouter from './router/invoice.router';
+import DashboardRouter from './router/dashboard.router';
 const app=express();
 app.use(express.json());
 app.use(cors({
@@ -36,6 +37,7 @@ app.use("/api/item",ProductRouter)
 app.use("/api/product",ProductTransactionRouter);
 app.use("/api/report",ReportRouter);
 app.use("/api/invoice",InvoiceRouter);
+app.use("/api/dashboard",DashboardRouter);
 app.use(errorHandler);
 
 const port=process.env.PORT || 5000;

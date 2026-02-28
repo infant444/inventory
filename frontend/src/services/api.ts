@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 
-// const API_BASE_URL = 'http://localhost:5000/api';
-const API_BASE_URL = 'https://inventory-z6w5.onrender.com/api';
+const API_BASE_URL = 'http://localhost:5000/api';
+// const API_BASE_URL = 'https://inventory-z6w5.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -133,6 +133,13 @@ export const invoiceAPI = {
   markAsPaid: (invoiceId: string, data: any) => api.put(`/invoice/mark-paid/${invoiceId}`, data),
   deleteInvoice: (invoiceId: string) => api.delete(`/invoice/delete/${invoiceId}`),
   getUpcomingAlerts: () => api.get('/invoice/upcoming-alerts'),
+};
+
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+  getRecentTransactions: () => api.get('/dashboard/recent-transactions'),
+  getRecentInvoices: () => api.get('/dashboard/recent-invoices'),
+  getLowStockAlerts: () => api.get('/dashboard/low-stock-alerts'),
 };
 
 export default api;

@@ -1,180 +1,241 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
-import { 
-  Package, 
-  MapPin, 
-  Users, 
-  Truck, 
-  TrendingUp, 
-  AlertTriangle,
-  Activity,
-} from 'lucide-react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from 'react';
+import { Package, AlertTriangle, FileText, Users, TrendingUp, TrendingDown, Clock, DollarSign } from 'lucide-react';
+import { dashboardAPI } from '../services/api';
+import { useLoading } from '../context/LoadingContext';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const [stats, setStats] = useState<any>(null);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
+  const [lowStockAlerts, setLowStockAlerts] = useState<any[]>([]);
+  const { showLoading, hideLoading } = useLoading();
+  const navigate = useNavigate();
 
-  const stats = [
-    {
-      title: 'Total Items',
-      value: '1,234',
-      change: '+12%',
-      changeType: 'positive',
-      icon: Package,
-      color: 'bg-blue-500'
-    },
-    {
-      title: 'Locations',
-      value: '8',
-      change: '+2',
-      changeType: 'positive',
-      icon: MapPin,
-      color: 'bg-green-500'
-    },
-    {
-      title: 'Low Stock Alerts',
-      value: '23',
-      change: '+5',
-      changeType: 'negative',
-      icon: AlertTriangle,
-      color: 'bg-red-500'
-    },
-    {
-      title: 'Active Users',
-      value: '45',
-      change: '+3',
-      changeType: 'positive',
-      icon: Users,
-      color: 'bg-purple-500'
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    showLoading('Loading dashboard...');
+    try {
+      const [statsRes, transactionsRes, invoicesRes, alertsRes] = await Promise.all([
+        dashboardAPI.getStats(),
+        dashboardAPI.getRecentTransactions(),
+        dashboardAPI.getRecentInvoices(),
+        dashboardAPI.getLowStockAlerts()
+      ]);
+      setStats(statsRes.data);
+      setRecentTransactions(transactionsRes.data);
+      setRecentInvoices(invoicesRes.data);
+      setLowStockAlerts(alertsRes.data);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load dashboard');
+    } finally {
+      hideLoading();
     }
-  ];
-
-  const recentActivity = [
-    { action: 'Item added', item: 'Laptop Dell XPS', user: 'John Doe', time: '2 hours ago' },
-    { action: 'Stock updated', item: 'Office Chair', user: 'Jane Smith', time: '4 hours ago' },
-    { action: 'Location created', item: 'Warehouse B', user: 'Admin', time: '1 day ago' },
-    { action: 'User registered', item: 'Mike Johnson', user: 'Admin', time: '2 days ago' },
-  ];
+  };
 
   return (
-    <div className="">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">
-          Welcome back, {user?.full_name}!
-        </h1>
-        <p className="text-blue-100">
-          Here's what's happening with your inventory today.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                </div>
-                <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center">
-                <span className={`text-sm font-medium ${
-                  stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {stat.change}
-                </span>
-                <span className="text-sm text-gray-500 ml-2">from last month</span>
-              </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Items</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalItems || 0}</p>
             </div>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-            <Activity className="w-5 h-5 text-gray-500" />
-          </div>
-          <div className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
-                    {activity.action}: <span className="text-blue-600">{activity.item}</span>
-                  </p>
-                  <p className="text-xs text-gray-500">by {activity.user} • {activity.time}</p>
-                </div>
-              </div>
-            ))}
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <Package className="text-blue-600" size={24} />
+            </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
-            <TrendingUp className="w-5 h-5 text-gray-500" />
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Active Invoices</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.activeInvoices || 0}</p>
+            </div>
+            <div className="bg-green-100 p-3 rounded-lg">
+              <FileText className="text-green-600" size={24} />
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <Package className="w-8 h-8 text-blue-500 mb-2" />
-              <p className="font-medium text-gray-900">Add Item</p>
-              <p className="text-sm text-gray-500">Create new inventory item</p>
-            </button>
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <MapPin className="w-8 h-8 text-green-500 mb-2" />
-              <p className="font-medium text-gray-900">New Location</p>
-              <p className="text-sm text-gray-500">Add warehouse location</p>
-            </button>
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <Truck className="w-8 h-8 text-purple-500 mb-2" />
-              <p className="font-medium text-gray-900">Add Supplier</p>
-              <p className="text-sm text-gray-500">Register new supplier</p>
-            </button>
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <Users className="w-8 h-8 text-orange-500 mb-2" />
-              <p className="font-medium text-gray-900">Manage Users</p>
-              <p className="text-sm text-gray-500">User administration</p>
-            </button>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Pending Invoices</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.pendingInvoices || 0}</p>
+            </div>
+            <div className="bg-yellow-100 p-3 rounded-lg">
+              <Clock className="text-yellow-600" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Users</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.totalUsers || 0}</p>
+            </div>
+            <div className="bg-purple-100 p-3 rounded-lg">
+              <Users className="text-purple-600" size={24} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Low Stock Alerts</p>
+              <p className="text-2xl font-bold text-red-600">{stats?.lowStockAlerts || 0}</p>
+            </div>
+            <div className="bg-red-100 p-3 rounded-lg">
+              <AlertTriangle className="text-red-600" size={24} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <button onClick={() => navigate('/items')} className="p-4 border-2 border-blue-200 rounded-lg hover:bg-blue-50 transition">
+            <Package className="mx-auto mb-2 text-blue-600" size={24} />
+            <p className="text-sm font-medium">Manage Items</p>
+          </button>
+          <button onClick={() => navigate('/checkin-checkout')} className="p-4 border-2 border-green-200 rounded-lg hover:bg-green-50 transition">
+            <TrendingUp className="mx-auto mb-2 text-green-600" size={24} />
+            <p className="text-sm font-medium">Check In/Out</p>
+          </button>
+          <button onClick={() => navigate('/payment-tracker')} className="p-4 border-2 border-yellow-200 rounded-lg hover:bg-yellow-50 transition">
+            <FileText className="mx-auto mb-2 text-yellow-600" size={24} />
+            <p className="text-sm font-medium">Invoices</p>
+          </button>
+          <button onClick={() => navigate('/reports')} className="p-4 border-2 border-purple-200 rounded-lg hover:bg-purple-50 transition">
+            <DollarSign className="mx-auto mb-2 text-purple-600" size={24} />
+            <p className="text-sm font-medium">Reports</p>
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Transactions */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Recent Transactions</h2>
+            <button onClick={() => navigate('/reports')} className="text-sm text-blue-600 hover:underline">View All</button>
+          </div>
+          <div className="space-y-3">
+            {recentTransactions.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">No recent transactions</p>
+            ) : (
+              recentTransactions.map((txn, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {txn.transactionType === 'checkin' ? (
+                      <TrendingUp className="text-green-600" size={20} />
+                    ) : (
+                      <TrendingDown className="text-blue-600" size={20} />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">{txn.item.itemName}</p>
+                      <p className="text-xs text-gray-500">{new Date(txn.createdAt).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold">{txn.quantity} {txn.quantityType}</p>
+                    <span className={`text-xs px-2 py-1 rounded-full ${txn.transactionType === 'checkin' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                      {txn.transactionType.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Recent Invoices */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Recent Invoices</h2>
+            <button onClick={() => navigate('/payment-tracker')} className="text-sm text-blue-600 hover:underline">View All</button>
+          </div>
+          <div className="space-y-3">
+            {recentInvoices.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">No recent invoices</p>
+            ) : (
+              recentInvoices.map((invoice, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium">{invoice.invoiceName}</p>
+                    <p className="text-xs text-gray-500">{invoice.invoiceNumber}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold">₹{Number(invoice.amount).toFixed(2)}</p>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      invoice.status === 'paid' ? 'bg-green-100 text-green-700' :
+                      invoice.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      invoice.status === 'overdue' ? 'bg-red-100 text-red-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {invoice.status.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
       {/* Low Stock Alerts */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Low Stock Alerts</h2>
-          <AlertTriangle className="w-5 h-5 text-red-500" />
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-red-600">Low Stock Alerts</h2>
+          <button onClick={() => navigate('/items')} className="text-sm text-blue-600 hover:underline">View All Items</button>
         </div>
-        <div className="space-y-3">
-          {[
-            { item: 'Office Supplies - Pens', current: 5, minimum: 20, location: 'Main Office' },
-            { item: 'Laptop Chargers', current: 2, minimum: 10, location: 'IT Department' },
-            { item: 'Printer Paper A4', current: 8, minimum: 50, location: 'Warehouse A' },
-          ].map((alert, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
-              <div>
-                <p className="font-medium text-gray-900">{alert.item}</p>
-                <p className="text-sm text-gray-600">{alert.location}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-red-600">
-                  {alert.current} / {alert.minimum}
-                </p>
-                <p className="text-xs text-red-500">Below minimum</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {lowStockAlerts.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-4">No low stock alerts</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item Code</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Current Qty</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ROL</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {lowStockAlerts.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm">{item.itemCode}</td>
+                    <td className="px-4 py-3 text-sm font-medium">{item.itemName}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <span className="text-red-600 font-semibold">{item.currentQty}</span>
+                    </td>
+                    <td className="px-4 py-3 text-sm">{item.rol}</td>
+                    <td className="px-4 py-3 text-sm">{item.supplier || '-'}</td>
+                    <td className="px-4 py-3 text-sm">{item.category || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
