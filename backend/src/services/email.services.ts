@@ -1,4 +1,4 @@
-import { MailConfig, mailGenerator } from "../config/email.config";
+import { transporter, mailGenerator } from "../config/email.config";
 import { User } from "../model/user.model";
 import nodeMailer from 'nodemailer';
 const company_name = "ABC Company";
@@ -63,7 +63,6 @@ export class EmailServices {
 
 
 const mailSender = async (template: any, subject: string, email: string): Promise<Boolean> => {
-    let transporter = nodeMailer.createTransport(MailConfig);
     const mail = mailGenerator.generate(template);
     let message = {
         from: `" ${company_name}" <riplanit@gmail.com>`,
@@ -83,7 +82,6 @@ const mailSender = async (template: any, subject: string, email: string): Promis
     }
 }
 const mailSenderWithAttachment = async (template: any, subject: string, email: string, attachment: any): Promise<Boolean> => {
-    let transporter = nodeMailer.createTransport(MailConfig);
     const mail = mailGenerator.generate(template);
     let message = {
         from: `" ${company_name}" <riplanit@gmail.com>`,
