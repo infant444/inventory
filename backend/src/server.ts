@@ -14,6 +14,7 @@ import ProductTransactionRouter from './router/product-transaction.router';
 import ReportRouter from './router/report.router';
 import InvoiceRouter from './router/invoice.router';
 import DashboardRouter from './router/dashboard.router';
+import { transporter } from './config/email.config';
 const app=express();
 app.use(express.json());
 app.use(cors({
@@ -27,6 +28,15 @@ app.get("/",(req,res)=>{
     res.status(200).json({
         message: "Hello Welcome to our site" });
 })
+app.get("/mail-test", async (req, res) => {
+  try {
+    await transporter.verify();
+    res.send("Mail server is ready");
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).send("Mail server error: " + error.message);
+  }
+});
 app.use("/api/auth",AuthRouter);
 app.use("/api/user",UserRouter);
 app.use("/api/location", LocationRouter);
