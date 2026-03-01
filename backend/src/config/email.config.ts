@@ -9,17 +9,12 @@ export const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.MAIL,
-    pass: process.env.MAIL_PASS, // must be App Password
+    pass: process.env.MAIL_PASS,
   },
-});
-
-// Verify connection (optional but helpful)
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("Mail server error:", error);
-  } else {
-    console.log("Mail server is ready");
-  }
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 10000,
 });
 
 // ======================

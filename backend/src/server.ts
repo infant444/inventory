@@ -30,8 +30,13 @@ app.get("/",(req,res)=>{
 })
 app.get("/mail-test", async (req, res) => {
   try {
-    await transporter.verify();
-    res.send("Mail server is ready");
+    await transporter.sendMail({
+      from: process.env.MAIL,
+      to: process.env.MAIL,
+      subject: "Test",
+      text: "Test email"
+    });
+    res.send("Mail sent successfully");
   } catch (error: any) {
     console.error(error);
     res.status(500).send("Mail server error: " + error.message);
@@ -53,5 +58,4 @@ app.use(errorHandler);
 const port=process.env.PORT || 5000;
 app.listen(port,()=>{
     console.log("Website serve on http://localhost:"+port);
-    
-})
+});
