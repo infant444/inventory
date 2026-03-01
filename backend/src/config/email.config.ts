@@ -6,16 +6,12 @@ import Mailgen from "mailgen";
 // ======================
 
 export const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // true for 465, false for 587
+  service: 'gmail',
   auth: {
-    user: process.env.MAIL,
-    pass: process.env.MAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false
+    user: process.env.EMAIL_USER!,
+    pass: process.env.EMAIL_PASSWORD!,
   }
+
 });
 
 // Verify connection (optional but helpful)
