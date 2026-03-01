@@ -6,12 +6,12 @@ import Mailgen from "mailgen";
 // ======================
 
 export const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false, 
   auth: {
-    user: process.env.MAIL,
-    pass: process.env.MAIL_PASS, // must be App Password
+    user: process.env.BREVO,
+    pass: process.env.BREVO_PASS, // must be App Password
   },
 });
 // ======================
