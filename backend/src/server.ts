@@ -16,6 +16,7 @@ import ReportRouter from './router/report.router';
 import InvoiceRouter from './router/invoice.router';
 import DashboardRouter from './router/dashboard.router';
 import { transporter } from './config/email.config';
+import { startScheduler } from './services/scheduler.services';
 
 const app = express();
 
@@ -69,4 +70,6 @@ const port = process.env.PORT || 5000;
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
+    startScheduler();
+    console.log('Scheduler started - Daily reports will be sent at 6 PM');
 });

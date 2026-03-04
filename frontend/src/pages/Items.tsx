@@ -828,7 +828,7 @@ const Items: React.FC = () => {
                   Item
                 </label>
                 <p className="text-gray-900 font-medium">
-                  {printItem?.itemName}
+                 {printItem?.itemCode}- {printItem?.itemName}
                 </p>
               </div>
               <div>

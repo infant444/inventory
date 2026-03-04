@@ -1,5 +1,6 @@
 interface Item {
   itemId: string;
+  itemCode: string;
   itemName: string;
   barcode?: string;
 }
@@ -18,7 +19,7 @@ export const generateBarcodeSheet = ({ item, count }: BarcodeSheetGeneratorProps
   let html = `
     <html>
       <head>
-        <title>Barcode Sheet - ${item.itemName}</title>
+        <title>Barcode Sheet - ${item.itemName}-(${item.itemCode})</title>
         <style>
           body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
           .barcode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -39,7 +40,7 @@ export const generateBarcodeSheet = ({ item, count }: BarcodeSheetGeneratorProps
       <div class="barcode-item">
         <canvas id="barcode${i}"></canvas>
         <div class="item-info">
-          <div>${item.itemName}</div>
+          <div>${item.itemName}</div><div>${item.itemCode}</div>
         </div>
       </div>
     `;

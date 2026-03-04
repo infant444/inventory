@@ -235,27 +235,28 @@ export class ReportController {
             transactions.forEach(t => {
                 const itemName = t.item.itemName;
                 const qty = Number(t.quantity);
+                const qtyType = t.quantityType;
 
                 if (t.transactionType === 'checkin') {
                     if (!checkInData[itemName]) {
-                        checkInData[itemName] = 0;
+                        checkInData[itemName] = { quantity: 0, quantityType: qtyType };
                     }
-                    checkInData[itemName] += qty;
+                    checkInData[itemName].quantity += qty;
                 } else {
                     if (!checkOutData[itemName]) {
-                        checkOutData[itemName] = 0;
+                        checkOutData[itemName] = { quantity: 0, quantityType: qtyType };
                     }
-                    checkOutData[itemName] += qty;
+                    checkOutData[itemName].quantity += qty;
                 }
             });
 
             const topCheckIn = Object.entries(checkInData)
-                .map(([name, quantity]) => ({ name, quantity }))
+                .map(([name, data]: [string, any]) => ({ name, quantity: data.quantity, quantityType: data.quantityType }))
                 .sort((a: any, b: any) => b.quantity - a.quantity)
                 .slice(0, 10);
 
             const topCheckOut = Object.entries(checkOutData)
-                .map(([name, quantity]) => ({ name, quantity }))
+                .map(([name, data]: [string, any]) => ({ name, quantity: data.quantity, quantityType: data.quantityType }))
                 .sort((a: any, b: any) => b.quantity - a.quantity)
                 .slice(0, 10);
 
@@ -263,15 +264,16 @@ export class ReportController {
             transactions.forEach(t => {
                 const itemName = t.item.itemName;
                 const qty = Number(t.quantity);
+                const qtyType = t.quantityType;
 
                 if (!productData[itemName]) {
-                    productData[itemName] = 0;
+                    productData[itemName] = { quantity: 0, quantityType: qtyType };
                 }
-                productData[itemName] += qty;
+                productData[itemName].quantity += qty;
             });
 
             const topProducts = Object.entries(productData)
-                .map(([name, quantity]) => ({ name, quantity }))
+                .map(([name, data]: [string, any]) => ({ name, quantity: data.quantity, quantityType: data.quantityType }))
                 .sort((a: any, b: any) => b.quantity - a.quantity)
                 .slice(0, 10);
 

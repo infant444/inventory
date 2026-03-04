@@ -256,7 +256,7 @@ const Reports: React.FC = () => {
   };
 
   const downloadCSV = () => {
-    const headers = ['Date', 'Item Name', 'Item Code', 'Type', 'Quantity', 'Price', 'Tax %', 'Tax Amount', 'Total Amount', 'Location', 'User'];
+    const headers = ['Date','Time', 'Item Name', 'Item Code', 'Type', 'Quantity', 'Price', 'Tax %', 'Tax Amount', 'Total Amount', 'Location', 'User'];
     const rows = transactions.map(t => [
       new Date(t.date).toLocaleString(),
       t.itemName,
@@ -483,7 +483,7 @@ const Reports: React.FC = () => {
               {charts.topCheckIn.map((product: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">{product.name}</span>
-                  <span className="text-sm font-semibold text-green-600">{product.quantity} units</span>
+                  <span className="text-sm font-semibold text-green-600">{product.quantity} {product.quantityType}</span>
                 </div>
               ))}
             </div>
@@ -495,7 +495,7 @@ const Reports: React.FC = () => {
               {charts.topCheckOut.map((product: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">{product.name}</span>
-                  <span className="text-sm font-semibold text-blue-600">{product.quantity} units</span>
+                  <span className="text-sm font-semibold text-blue-600">{product.quantity} {product.quantityType}</span>
                 </div>
               ))}
             </div>

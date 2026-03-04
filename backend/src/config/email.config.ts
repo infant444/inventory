@@ -5,13 +5,20 @@ import Mailgen from "mailgen";
 // Nodemailer Transporter
 // ======================
 
+// export const transporter = nodemailer.createTransport({
+//   host: "smtp-relay.brevo.com",
+//   port: 587,
+//   secure: false, 
+//   auth: {
+//     user: process.env.BREVO,
+//     pass: process.env.BREVO_PASS, // must be App Password
+//   },
+// });
 export const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false, 
+  service: "gmail",
   auth: {
-    user: process.env.BREVO,
-    pass: process.env.BREVO_PASS, // must be App Password
+    user: process.env.MAIL,
+    pass: process.env.MAIL_PASS,
   },
 });
 // ======================
