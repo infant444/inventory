@@ -7,7 +7,7 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-enum qtyType{
+enum qtyType {
   gram
   milliliter
   kilogram
@@ -19,6 +19,13 @@ enum qtyType{
   bottle
   can
 }
+
+enum categoryType {
+  item
+  financial
+  group
+}
+
 
 model User {
   userId            String           @id @default(uuid()) @map("user_id") @db.Uuid
@@ -79,7 +86,9 @@ model TypeMaster {
   description String?
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
-  items       ItemMaster[]
+  type        categoryType @default(item) 
+  items       ItemMaster[] @relation("ItemType")
+  groupItems  ItemMaster[] @relation("ItemGroup")
 
   @@map("type_master")
 }
@@ -119,12 +128,17 @@ model ItemMaster {
   defaultIncrease   Decimal         @db.Decimal(10, 2)@default(1)@map("default_increase")
   defaultDecrease   Decimal         @db.Decimal(10, 2)@default(1)@map("default_decrease")
   lastPurchaseDate DateTime?       @map("last_purchase_date")
+  packCount Int? @map("pack_count")
+  packQty Decimal? @db.Decimal(10,2)
+  groupName String? @map("group_name") @db.Uuid
   location      Location         @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
   supplier      SupplierMaster?  @relation(fields: [supplierId], references: [supplierId])
   tax           TaxMaster?       @relation(fields: [taxId], references: [taxId])
-  type          TypeMaster?      @relation(fields: [typeId], references: [typeId])
+  type          TypeMaster?      @relation("ItemType", fields: [typeId], references: [typeId])
+  group         TypeMaster?      @relation("ItemGroup", fields: [groupName], references: [typeId])
   alerts        ReorderAlert[]
   transactions  TransactionLog[]
+ 
 
   @@unique([itemCode, locationId])
   @@map("item_master")
@@ -176,6 +190,10 @@ model UserLocation {
   @@unique([userId, locationId])
   @@map("user_locations")
 }
+enum invoiceType {
+  general
+  purchase
+}
 
 model Invoice {
   invoiceId      String        @id @default(uuid()) @map("invoice_id") @db.Uuid
@@ -193,7 +211,7 @@ model Invoice {
   createdBy      String        @map("created_by") @db.Uuid
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
-
+  invoiceType    invoiceType   @default(purchase) @map("invoice_type")
   @@map("invoices")
 }
 

@@ -4,11 +4,12 @@ import { prisma } from "../lib/prisma";
 export class categoriesController {
     static async createCategories(req: Request, res: Response, next: NextFunction) {
         try {
-            const { typeName, description } = req.body
+            const { typeName, description, type } = req.body
             const categories = await prisma.typeMaster.create({
                 data: {
                     typeName: typeName,
-                    description: description
+                    description: description,
+                    type,
                 }
             })
             res.json(categories)
@@ -18,7 +19,11 @@ export class categoriesController {
     }
     static async getAllCategories(req: Request, res: Response, next: NextFunction) {
         try {
-            const categories = await prisma.typeMaster.findMany()
+            const categories = await prisma.typeMaster.findMany({
+                where:{
+                    type:"item"
+                }
+            })
             res.json(categories)
         } catch (error) {
             next(error)

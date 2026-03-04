@@ -18,7 +18,8 @@ import Suppliers from "./pages/Suppliers";
 import Categories from "./pages/Categories";
 import TaxSettings from "./pages/TaxSettings";
 import Settings from "./pages/Settings";
-import CheckInOut from "./pages/CheckInOut";
+import CheckIn from "./pages/CheckIn";
+import CheckOut from "./pages/CheckOut";
 import Reports from "./pages/Reports";
 import PaymentTracker from "./pages/PaymentTracker";
 import { ToastContainer } from "react-toastify";
@@ -52,7 +53,7 @@ function AppRoutes() {
 
   const getDefaultRoute = () => {
     if (!user) return "/dashboard";
-    if (user.role === "staff") return "/dashboard/checkin-checkout";
+    if (user.role === "staff") return "/dashboard/checkin";
     if (user.role === "analyzer") return "/dashboard/reports";
     return "/dashboard";
   };
@@ -96,10 +97,18 @@ function AppRoutes() {
           }
         />
         <Route
-          path="checkin-checkout"
+          path="checkin"
           element={
             <ProtectedRoute requiredRoles={["admin", "staff"]}>
-              <CheckInOut />
+              <CheckIn />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="checkout"
+          element={
+            <ProtectedRoute requiredRoles={["admin", "staff"]}>
+              <CheckOut />
             </ProtectedRoute>
           }
         />

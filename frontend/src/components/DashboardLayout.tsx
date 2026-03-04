@@ -21,9 +21,10 @@ import {
   Bell,
   ChevronDown,
   Settings as SettingsIcon,
-  ArrowLeftRight,
   FileText,
-  CreditCard
+  CreditCard,
+  ArrowDownCircle,
+  ArrowUpCircle
 } from 'lucide-react';
 
 const DashboardLayout: React.FC = () => {
@@ -70,7 +71,8 @@ const DashboardLayout: React.FC = () => {
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard', roles: ['admin', 'manager',] },
     { icon: Package, label: 'Items', path: '/items', roles: ['admin', 'manager',] },
-    { icon: ArrowLeftRight, label: 'Check-In/Out', path: '/checkin-checkout', roles: ['admin', 'staff'] },
+    { icon: ArrowDownCircle, label: 'Check-In', path: '/checkin', roles: ['admin', 'staff'] },
+    { icon: ArrowUpCircle, label: 'Check-Out', path: '/checkout', roles: ['admin', 'staff'] },
     { icon: CreditCard, label: 'Payment Tracker', path: '/payment-tracker', roles: ['admin', 'manager','analyzer'] },
     { icon: FileText, label: 'Reports', path: '/reports', roles: ['admin', 'manager','analyzer'] },
     { icon: MapPin, label: 'Locations', path: '/locations', roles: ['admin'] },
