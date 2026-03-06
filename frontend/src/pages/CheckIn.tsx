@@ -225,7 +225,7 @@ const CheckIn: React.FC = () => {
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{item.itemName}</h3>
                       <p className="text-sm text-gray-600">{item.itemCode}</p>
-                      <p className="text-xs text-gray-500">Stock: {item.currentQty} {item.quantityType || 'unit'}</p>
+                      <p className="text-xs text-gray-500">Stock: {item.currentQty} pack</p>
                     </div>
                     <button
                       onClick={() => removeItem(item.itemId)}
@@ -236,7 +236,12 @@ const CheckIn: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-gray-600">Quantity ({item.quantityType || 'unit'})</label>
+                      <label className="text-xs text-gray-600">Quantity pack<br/>
+                      <div>
+                        {`${item.quantity}* ${item.packQty}= ${item.quantity*item.packQty}${item.quantityType || 'pack'}`}
+                      </div>
+                      </label>
+
                       <input
                         type="number"
                         value={item.quantity}
@@ -247,9 +252,14 @@ const CheckIn: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-600">Current Stock</label>
+                      <label className="text-xs text-gray-600">Current Stock <br/>
+                         <div>
+                        {`${item.currentQty}* ${item.packQty}= ${item.currentQty*item.packQty}${item.quantityType || 'pack'}`}
+                      </div>
+                      </label>
+
                       <div className="px-2 py-1 bg-gray-100 rounded text-sm font-medium">
-                        {item.currentQty} {item.quantityType || 'unit'}
+                        {item.currentQty} pack
                       </div>
                     </div>
                   </div>

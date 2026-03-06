@@ -57,7 +57,7 @@ export class InvoiceController {
             const invoices = await prisma.invoice.findMany({
                 where: whereClause,
             
-                orderBy: { dueDate: 'asc' }
+                orderBy: { invoiceDate: 'desc' }
             });
 
             res.status(200).json(invoices);

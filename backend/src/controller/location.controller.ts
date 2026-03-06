@@ -141,7 +141,7 @@ export class LocationController {
     static async getUserLocation(req: any, res: Response, next: NextFunction) {
         try {
             const userId = req.user.id
-            console.log("HI")
+            // console.log("HI")
             const user = await prisma.user.findUnique({
                 where: { userId },
                 select: { locationIds: true },
@@ -167,7 +167,7 @@ export class LocationController {
     static async getUserLocationById(req: any, res: Response, next: NextFunction) {
         try {
             const userId = req.user.id
-            console.log("Hello")
+            // console.log("Hello")
             const userLocation = await prisma.userLocation.findFirst({
                 where: {
                     userId: userId,
