@@ -13,9 +13,6 @@ enum qtyType {
   kilogram
   milligram
   liter
-  packet
-  box
-  carton
   bottle
   can
 }
@@ -110,7 +107,6 @@ model ItemMaster {
   itemCode      String           @map("item_code") @db.VarChar(50)
   itemName      String           @map("item_name") @db.VarChar(150)
   locationId    String           @map("location_id") @db.Uuid
-  openingQty    Decimal          @default(0) @map("opening_qty") @db.Decimal(10, 2)
   currentQty    Decimal          @default(0) @map("current_qty") @db.Decimal(10, 2)
   barcode       String?
   supplierId    String?          @map("supplier_id") @db.Uuid
@@ -128,8 +124,8 @@ model ItemMaster {
   defaultIncrease   Decimal         @db.Decimal(10, 2)@default(1)@map("default_increase")
   defaultDecrease   Decimal         @db.Decimal(10, 2)@default(1)@map("default_decrease")
   lastPurchaseDate DateTime?       @map("last_purchase_date")
-  packCount Int? @map("pack_count")
-  packQty Decimal? @db.Decimal(10,2)
+  packQty Decimal? @db.Decimal(10, 2) @map("pack_count")
+  isDisable      Boolean @default(false)@map("is_disable")
   groupName String? @map("group_name") @db.Uuid
   location      Location         @relation(fields: [locationId], references: [locationId], onDelete: Cascade)
   supplier      SupplierMaster?  @relation(fields: [supplierId], references: [supplierId])

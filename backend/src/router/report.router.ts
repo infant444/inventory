@@ -13,6 +13,16 @@ route.get("/charts", asyncHandler(ReportController.getCharts));
 route.get("/item-analysis", asyncHandler(ReportController.getItemAnalysis));
 route.get("/rol-recommendations", asyncHandler(ReportController.getROLRecommendations));
 route.get("/supplier-price-analysis", asyncHandler(ReportController.getSupplierPriceAnalysis));
+route.get("/daily-log", asyncHandler(ReportController.getDailyLog));
+route.get("/monthly-log", asyncHandler(ReportController.getMonthlyLog));
 route.get("/stock-report", asyncHandler(ReportController.getStockReport));
+route.get("/high-consumption", asyncHandler(ReportController.getHighConsumption));
+route.get("/low-consumption", asyncHandler(ReportController.getLowConsumption));
+route.get("/predictive-analytics", asyncHandler(ReportController.getPredictiveAnalytics));
+route.get("/abc-analysis", asyncHandler(ReportController.getABCAnalysis));
+route.get("/seasonal-trends", asyncHandler(ReportController.getSeasonalTrends));
+route.get("/smart-insights", asyncHandler(ReportController.getSmartInsights));
+route.get("/transaction-analysis", asyncHandler(ReportController.getTransactionAnalysis));
+route.get("/grouped-products", asyncHandler(ReportController.getGroupedProducts));
 
 export default route;

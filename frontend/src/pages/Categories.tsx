@@ -8,23 +8,25 @@ interface Category {
   typeId: string;
   typeName: string;
   description?: string;
+  type: 'item' | 'financial' | 'group';
 }
 
 const Categories: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [activeTab, setActiveTab] = useState<'item' | 'financial' | 'group'>('item');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewingCategory, setViewingCategory] = useState<Category | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({ typeName: '', description: '' });
+  const [formData, setFormData] = useState({ typeName: '', description: '', type: 'item' as 'item' | 'financial' | 'group' });
   const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [activeTab]);
 
   const fetchCategories = async () => {
     try {
-      const response = await categoriesAPI.getCategories();
+      const response = await categoriesAPI.getTypeCategories(activeTab);
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -71,10 +73,10 @@ const Categories: React.FC = () => {
   const openModal = (category?: Category) => {
     if (category) {
       setEditingCategory(category);
-      setFormData({ typeName: category.typeName, description: category.description || '' });
+      setFormData({ typeName: category.typeName, description: category.description || '', type: category.type });
     } else {
       setEditingCategory(null);
-      setFormData({ typeName: '', description: '' });
+      setFormData({ typeName: '', description: '', type: activeTab });
     }
     setIsModalOpen(true);
   };
@@ -82,16 +84,49 @@ const Categories: React.FC = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingCategory(null);
-    setFormData({ typeName: '', description: '' });
+    setFormData({ typeName: '', description: '', type: 'item' });
   };
 
   return (
     <div className="">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
         <button onClick={() => openModal()} className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
           <Plus size={20} />
           <span>Add Category</span>
+        </button>
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setActiveTab('item')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            activeTab === 'item'
+              ? 'bg-indigo-500 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Item Categories
+        </button>
+        <button
+          onClick={() => setActiveTab('financial')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            activeTab === 'financial'
+              ? 'bg-indigo-500 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Financial Categories
+        </button>
+        <button
+          onClick={() => setActiveTab('group')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            activeTab === 'group'
+              ? 'bg-indigo-500 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Group Categories
         </button>
       </div>
       
@@ -174,6 +209,10 @@ const Categories: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
                 <input type="text" required value={formData.typeName} onChange={(e) => setFormData({ ...formData, typeName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                <input type="text" disabled value={formData.type} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 capitalize" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>

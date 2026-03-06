@@ -24,7 +24,8 @@ import {
   FileText,
   CreditCard,
   ArrowDownCircle,
-  ArrowUpCircle
+  ArrowUpCircle,
+  Group
 } from 'lucide-react';
 
 const DashboardLayout: React.FC = () => {
@@ -45,6 +46,7 @@ const DashboardLayout: React.FC = () => {
   const fetchUserLocations = async () => {
     try {
       const response = await locationAPI.getUserLocation();
+      console.log(response.data)
       setAvailableLocations(response.data);
     } catch (error) {
       console.error('Error fetching user locations:', error);
@@ -74,7 +76,9 @@ const DashboardLayout: React.FC = () => {
     { icon: ArrowDownCircle, label: 'Check-In', path: '/checkin', roles: ['admin', 'staff'] },
     { icon: ArrowUpCircle, label: 'Check-Out', path: '/checkout', roles: ['admin', 'staff'] },
     { icon: CreditCard, label: 'Payment Tracker', path: '/payment-tracker', roles: ['admin', 'manager','analyzer'] },
+    { icon: Calculator, label: 'Office Payment', path: '/payment-tracker-office', roles: ['admin', 'manager','analyzer'] },
     { icon: FileText, label: 'Reports', path: '/reports', roles: ['admin', 'manager','analyzer'] },
+    {icon:Group, label:"Group", path:"/grouped-products", roles: ['admin', 'manager','analyzer']},
     { icon: MapPin, label: 'Locations', path: '/locations', roles: ['admin'] },
     { icon: Users, label: 'Users', path: '/users', roles: ['admin'] },
     { icon: Truck, label: 'Suppliers', path: '/suppliers', roles: ['admin', 'manager'] },
@@ -114,7 +118,7 @@ const DashboardLayout: React.FC = () => {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto mt-6">
+        <nav className="flex-1 overflow-y-auto mt-6 scroll">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;

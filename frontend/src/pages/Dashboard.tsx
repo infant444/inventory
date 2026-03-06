@@ -32,7 +32,12 @@ const Dashboard: React.FC = () => {
       setRecentInvoices(invoicesRes.data);
       setLowStockAlerts(alertsRes.data);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to load dashboard');
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+        navigate('/login');
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to load dashboard');
+      }
     } finally {
       hideLoading();
     }

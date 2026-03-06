@@ -12,8 +12,8 @@ export class DashboardController {
 
             const [totalItems, activeInvoices, pendingInvoices, totalUsers, lowStockItems] = await Promise.all([
                 prisma.itemMaster.count({ where: { locationId } }),
-                prisma.invoice.count({ where: { locationId, status: { in: ['pending', 'overdue'] } } }),
-                prisma.invoice.count({ where: { locationId, status: 'pending' } }),
+                prisma.invoice.count({ where: { locationId, status: { in: ['pending', 'overdue'] } } }).catch(() => 0),
+                prisma.invoice.count({ where: { locationId, status: 'pending' } }).catch(() => 0),
                 prisma.user.count({ where: { isActive: true } }),
                 prisma.itemMaster.count({
                     where: {

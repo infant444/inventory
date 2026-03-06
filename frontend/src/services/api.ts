@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
-// const API_BASE_URL = 'https://inventory-qj08.onrender.com/api';
+// const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://inventory-qj08.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -102,6 +102,7 @@ export const itemAPI = {
 
 export const categoriesAPI = {
   getCategories: () => api.get('/categories/all'),
+  getTypeCategories:(type:string)=>api.get(`/categories/get?type=${type}`),
   getCategoryById: (categoriesId: string) => api.get(`/categories/get-by-id/${categoriesId}`),
   createCategory: (data: any) => api.post('/categories/create', data),
   updateCategory: (categoriesId: string, data: any) => api.put(`/categories/update/${categoriesId}`, data),
@@ -124,6 +125,7 @@ export const reportAPI = {
   getROLRecommendations: () => api.get('/report/rol-recommendations'),
   getSupplierPriceAnalysis: () => api.get('/report/supplier-price-analysis'),
   getStockReport: (params?: any) => api.get('/report/stock-report', { params }),
+  getGroupedProducts: () => api.get('/report/grouped-products'),
 };
 
 export const invoiceAPI = {
@@ -132,7 +134,7 @@ export const invoiceAPI = {
   updateInvoice: (invoiceId: string, data: any) => api.put(`/invoice/update/${invoiceId}`, data),
   markAsPaid: (invoiceId: string, data: any) => api.put(`/invoice/mark-paid/${invoiceId}`, data),
   deleteInvoice: (invoiceId: string) => api.delete(`/invoice/delete/${invoiceId}`),
-  getUpcomingAlerts: () => api.get('/invoice/upcoming-alerts'),
+  getUpcomingAlerts: (params?:any) => api.get('/invoice/upcoming-alerts',{params}),
 };
 
 export const dashboardAPI = {

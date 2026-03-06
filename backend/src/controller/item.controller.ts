@@ -4,7 +4,7 @@ import { prisma } from "../lib/prisma";
 export class ItemController {
     static async addItem(req: Request, res: Response, next: NextFunction) {
         try {
-            const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent, rol, moq, eoq,quantityType,defaultIncrease,defaultDecrease } = req.body;
+            const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent, rol, moq, eoq,quantityType,defaultIncrease,defaultDecrease,packQty,packCount,groupName } = req.body;
             
             const existingItem = await prisma.itemMaster.findFirst({
                 where: {
@@ -24,7 +24,6 @@ export class ItemController {
                     itemCode: item_code,
                     itemName: item_name,
                     locationId: location_id,
-                    openingQty: opening_qty,
                     currentQty: opening_qty,
                     barcode: barcode,
                     supplierId: supplier_id,
@@ -38,7 +37,9 @@ export class ItemController {
                     eoq: eoq,
                     quantityType,
                     defaultIncrease,
-                    defaultDecrease
+                    defaultDecrease,
+                    packQty,
+                    groupName
                 }
             })
             res.status(201).json({ item });
@@ -56,7 +57,8 @@ export class ItemController {
             
             const items = await prisma.itemMaster.findMany({
                 where: {
-                    locationId: locationId
+                    locationId: locationId,
+                    isDisable:false
                 }, include: {
                     location: true,
                     supplier: true,
@@ -81,7 +83,8 @@ export class ItemController {
             const items = await prisma.itemMaster.findMany({
                 where: {
                     locationId:locationId,
-                    itemId: id
+                    itemId: id,
+                    isDisable:false
                 }, include: {
                     location: true,
                     supplier: true,
@@ -108,7 +111,8 @@ export class ItemController {
             const item = await prisma.itemMaster.findFirst({
                 where: {
                     locationId: locationId,
-                    barcode: barcode
+                    barcode: barcode,
+                    isDisable:false
                 },
                 include: {
                     location: true,
@@ -134,7 +138,8 @@ export class ItemController {
             const item = await prisma.itemMaster.findFirst({
                 where: {
                     locationId: locationId,
-                    itemCode: itemCode
+                    itemCode: itemCode,
+                    isDisable:false,
                 },
                 include: {
                     location: true,
@@ -151,19 +156,19 @@ export class ItemController {
     static async updateItem(req: any, res: Response, next: NextFunction) {
         try {
             const id = req.params.itemId;
-            const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent } = req.body;
+            const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent,packQty,groupName } = req.body;
              const { rol, moq, eoq,defaultDecrease,defaultIncrease,quantityType } = req.body;
 
             const total_amount = purchase_price + (purchase_price * tax_percent) / 100;
             const item = await prisma.itemMaster.update({
                 where: {
-                    itemId: id
+                    itemId: id,
+                    isDisable:false
                 },
                 data: {
                     itemCode: item_code,
                     itemName: item_name,
                     locationId: location_id,
-                    openingQty: opening_qty,
                     barcode: barcode,
                     supplierId: supplier_id,
                     typeId: type_id,
@@ -176,7 +181,10 @@ export class ItemController {
                     eoq: eoq,
                     quantityType,
                     defaultIncrease,
-                    defaultDecrease
+                    defaultDecrease,
+                    packQty,
+                    groupName 
+
                 }
             })
             res.status(200).json(item)
@@ -187,10 +195,14 @@ export class ItemController {
  
     static async deleteItem(req: any, res: Response, next: NextFunction) {
         try {
-            const id = req.params.itemId;
-            const item = await prisma.itemMaster.delete({
+            const id = req.params.itemId as string;
+            const item = await prisma.itemMaster.update({
                 where: {
-                    itemId: id
+                    itemId: id,
+                    isDisable:false
+                },
+                data:{
+                    isDisable:true
                 }
             })
             res.status(200).json(item)

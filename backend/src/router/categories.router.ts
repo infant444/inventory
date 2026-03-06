@@ -10,6 +10,7 @@ route.use(authMiddleware);
 route.post("/create",asyncHandler(categoriesController.createCategories));
 route.get("/all", asyncHandler(categoriesController.getAllCategories));
 route.get("/get-by-id/:categoriesId", asyncHandler(categoriesController.getCategoriesById));
+route.get("/get", asyncHandler(categoriesController.getCategories));
 route.put("/update/:categoriesId", asyncHandler(categoriesController.updateCategories));
 route.delete("/delete/:categoriesId", asyncHandler(categoriesController.deleteCategories));
 export default route;

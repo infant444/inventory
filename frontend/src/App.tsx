@@ -22,7 +22,9 @@ import CheckIn from "./pages/CheckIn";
 import CheckOut from "./pages/CheckOut";
 import Reports from "./pages/Reports";
 import PaymentTracker from "./pages/PaymentTracker";
+import GroupedProducts from "./pages/GroupedProducts";
 import { ToastContainer } from "react-toastify";
+import PaymentTrackerOffice from "./pages/PaymentTrackerOffice";
 // import LocationSelector from './components/LocationSelector';
 
 function App() {
@@ -121,10 +123,26 @@ function AppRoutes() {
           }
         />
         <Route
+          path="grouped-products"
+          element={
+            <ProtectedRoute requiredRoles={["admin", "analyzer", "manager"]}>
+              <GroupedProducts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="payment-tracker"
           element={
             <ProtectedRoute requiredRoles={["admin", "analyzer", "manager"]}>
               <PaymentTracker />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="payment-tracker-office"
+          element={
+            <ProtectedRoute requiredRoles={["admin", "analyzer", "manager"]}>
+              <PaymentTrackerOffice/>
             </ProtectedRoute>
           }
         />

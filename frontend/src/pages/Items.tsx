@@ -42,6 +42,8 @@ interface Item {
   quantityType?: string;
   defaultIncrease?: number;
   defaultDecrease?: number;
+  packQty?: number;
+  groupName?: string;
   supplier?: { supplierName: string };
   type?: { categoryName: string };
   tax?: { tax_name: string };
@@ -52,6 +54,7 @@ const Items: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [group, setGroup] = useState<any[]>([]);
   const [taxes, setTaxes] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,20 +80,19 @@ const Items: React.FC = () => {
     quantityType: "gram",
     defaultIncrease: "1",
     defaultDecrease: "1",
+    packQty: "",
+    groupName: "",
   });
   const { showLoading, hideLoading } = useLoading();
- const QTY_TYPES: string[] = [
-  'gram',
-  'milliliter',
-  'kilogram',
-  'milligram',
-  'liter',
-  'packet',
-  'box',
-  'carton',
-  'bottle',
-  'can'
-];
+  const QTY_TYPES: string[] = [
+    "gram",
+    "milliliter",
+    "kilogram",
+    "milligram",
+    "liter",
+    "bottle",
+    "can",
+  ];
   useEffect(() => {
     fetchItems();
     fetchSuppliers();
@@ -98,6 +100,8 @@ const Items: React.FC = () => {
     fetchTaxes();
     fetchLocations();
   }, []);
+
+
 
   const fetchItems = async () => {
     showLoading("Loading items...");
@@ -124,8 +128,10 @@ const Items: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await categoriesAPI.getCategories();
+      const response = await categoriesAPI.getTypeCategories("item");
       setCategories(response.data);
+      const res = await categoriesAPI.getTypeCategories("group");
+      setGroup(res.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -166,6 +172,10 @@ const Items: React.FC = () => {
         eoq: parseInt(formData.eoq),
         defaultIncrease: parseFloat(formData.defaultIncrease),
         defaultDecrease: parseFloat(formData.defaultDecrease),
+        packQty: formData.packQty
+          ? parseInt(formData.packQty)
+          : undefined,
+        groupName: formData.groupName || undefined,
       };
       console.log(data);
       if (editingItem) {
@@ -221,6 +231,8 @@ const Items: React.FC = () => {
         quantityType: item.quantityType || "gram",
         defaultIncrease: item.defaultIncrease?.toString() || "1",
         defaultDecrease: item.defaultDecrease?.toString() || "1",
+        packQty: item.packQty?.toString() || "",
+        groupName: item.groupName || "",
       });
     } else {
       setEditingItem(null);
@@ -241,6 +253,8 @@ const Items: React.FC = () => {
         quantityType: "gram",
         defaultIncrease: "1",
         defaultDecrease: "1",
+        packQty: "",
+        groupName: "",
       });
     }
     setIsModalOpen(true);
@@ -266,6 +280,8 @@ const Items: React.FC = () => {
       quantityType: "gram",
       defaultIncrease: "1",
       defaultDecrease: "1",
+      packQty: "",
+      groupName: "",
     });
   };
 
@@ -374,16 +390,16 @@ const Items: React.FC = () => {
                       {item.currentQty}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 capitalize">
-                      {item.quantityType || 'unit'}
+                      {item.quantityType || "unit"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {item.rol || '-'}
+                      {item.rol || "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {item.moq || '-'}
+                      {item.moq || "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {item.eoq || '-'}
+                      {item.eoq || "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       ₹{item.totalAmount}
@@ -465,7 +481,9 @@ const Items: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-500 mb-1">
                     Unit Type
                   </label>
-                  <p className="text-gray-900 capitalize">{viewingItem.quantityType || 'unit'}</p>
+                  <p className="text-gray-900 capitalize">
+                    {viewingItem.quantityType || "unit"}
+                  </p>
                 </div>
               </div>
               <div>
@@ -479,13 +497,17 @@ const Items: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-500 mb-1">
                     Default Check-In
                   </label>
-                  <p className="text-gray-900">{viewingItem.defaultIncrease || 1}</p>
+                  <p className="text-gray-900">
+                    {viewingItem.defaultIncrease || 1}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">
                     Default Check-Out
                   </label>
-                  <p className="text-gray-900">{viewingItem.defaultDecrease || 1}</p>
+                  <p className="text-gray-900">
+                    {viewingItem.defaultDecrease || 1}
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
@@ -493,19 +515,19 @@ const Items: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-500 mb-1">
                     ROL
                   </label>
-                  <p className="text-gray-900">{viewingItem.rol || '-'}</p>
+                  <p className="text-gray-900">{viewingItem.rol || "-"}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">
                     MOQ
                   </label>
-                  <p className="text-gray-900">{viewingItem.moq || '-'}</p>
+                  <p className="text-gray-900">{viewingItem.moq || "-"}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">
                     EOQ
                   </label>
-                  <p className="text-gray-900">{viewingItem.eoq || '-'}</p>
+                  <p className="text-gray-900">{viewingItem.eoq || "-"}</p>
                 </div>
               </div>
               <div>
@@ -567,7 +589,58 @@ const Items: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+             
+
                 <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Group
+                  </label>
+                  <select
+                    value={formData.groupName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, groupName: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Group</option>
+                    {group.map((group) => (
+                      <option key={group.typeId} value={group.typeId}>
+                        {group.typeName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+               
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quantity *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    onChange={(e) =>
+                      setFormData({ ...formData, opening_qty: e.target.value })
+                    }                    value={formData.opening_qty}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    
+                  />
+                 
+                </div>
+                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pack Quantity
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.packQty}
+                    onChange={(e) =>
+                      setFormData({ ...formData, packQty: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                   <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Quantity type*
                   </label>
@@ -585,21 +658,6 @@ const Items: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Opening Quantity *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={formData.opening_qty}
-                    onChange={(e) =>
-                      setFormData({ ...formData, opening_qty: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -763,7 +821,7 @@ const Items: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                 <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Default Check-In
                   </label>
@@ -771,12 +829,15 @@ const Items: React.FC = () => {
                     type="number"
                     value={formData.defaultIncrease}
                     onChange={(e) =>
-                      setFormData({ ...formData, defaultIncrease: e.target.value })
+                      setFormData({
+                        ...formData,
+                        defaultIncrease: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                 <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Default Check-Out
                   </label>
@@ -784,7 +845,10 @@ const Items: React.FC = () => {
                     type="number"
                     value={formData.defaultDecrease}
                     onChange={(e) =>
-                      setFormData({ ...formData, defaultDecrease: e.target.value })
+                      setFormData({
+                        ...formData,
+                        defaultDecrease: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -828,7 +892,7 @@ const Items: React.FC = () => {
                   Item
                 </label>
                 <p className="text-gray-900 font-medium">
-                 {printItem?.itemCode}- {printItem?.itemName}
+                  {printItem?.itemCode}- {printItem?.itemName}
                 </p>
               </div>
               <div>

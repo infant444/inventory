@@ -19,15 +19,23 @@ export class categoriesController {
     }
     static async getAllCategories(req: Request, res: Response, next: NextFunction) {
         try {
-            const categories = await prisma.typeMaster.findMany({
-                where:{
-                    type:"item"
-                }
-            })
+            const categories = await prisma.typeMaster.findMany()
             res.json(categories)
         } catch (error) {
             next(error)
         }
+    }
+    static async getCategories(req: Request, res: Response, next: NextFunction){
+        try {
+            const type = req.query.type as 'item' | 'financial' | 'group'
+            const categories = await prisma.typeMaster.findMany({
+                where: {
+                    type:type
+                }})
+            res.json(categories)
+            }catch(err){
+                next(err)
+            }
     }
     static async getCategoriesById(req: Request, res: Response, next: NextFunction) {
         try {

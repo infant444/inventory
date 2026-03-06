@@ -4,7 +4,7 @@ import { prisma } from "../lib/prisma";
 export class InvoiceController {
     static async createInvoice(req: any, res: Response, next: NextFunction) {
         try {
-            const { invoice_number, invoice_name, supplier_id, amount, invoice_date, due_date, notes } = req.body;
+            const { invoice_number, invoice_name, supplier_id, amount, invoice_date, due_date, notes, type } = req.body;
             const locationId = req.headers.location_id;
             const userId = req.user.id;
 
@@ -23,7 +23,8 @@ export class InvoiceController {
                     dueDate: new Date(due_date),
                     notes: notes || null,
                     locationId: locationId,
-                    createdBy: userId
+                    createdBy: userId,
+                    invoiceType: type || 'purchase'
                 }
             });
 
@@ -35,7 +36,7 @@ export class InvoiceController {
 
     static async getAllInvoices(req: any, res: Response, next: NextFunction) {
         try {
-            const { status } = req.query;
+            const { status,type } = req.query;
             const locationId = req.headers.location_id;
 
             if (!locationId) {
@@ -47,9 +48,14 @@ export class InvoiceController {
             if (status) {
                 whereClause.status = status;
             }
-
+            if (type) {
+                whereClause.invoiceType = type;
+            }
+            
+            // console.log(whereClause)
             const invoices = await prisma.invoice.findMany({
                 where: whereClause,
+            
                 orderBy: { dueDate: 'asc' }
             });
 
@@ -62,20 +68,26 @@ export class InvoiceController {
     static async updateInvoice(req: any, res: Response, next: NextFunction) {
         try {
             const { invoiceId } = req.params;
-            const { invoice_number, invoice_name, supplier_id, amount, invoice_date, due_date, notes, status } = req.body;
+            const { invoice_number, invoice_name, supplier_id, amount, invoice_date, due_date, notes, status, type } = req.body;
+
+            const updateData: any = {
+                invoiceNumber: invoice_number,
+                invoiceName: invoice_name,
+                supplierId: supplier_id || null,
+                amount: amount,
+                invoiceDate: new Date(invoice_date),
+                dueDate: new Date(due_date),
+                notes: notes || null,
+                status: status
+            };
+
+            if (type) {
+                updateData.invoiceType = type;
+            }
 
             const invoice = await prisma.invoice.update({
                 where: { invoiceId: invoiceId },
-                data: {
-                    invoiceNumber: invoice_number,
-                    invoiceName: invoice_name,
-                    supplierId: supplier_id || null,
-                    amount: amount,
-                    invoiceDate: new Date(invoice_date),
-                    dueDate: new Date(due_date),
-                    notes: notes || null,
-                    status: status
-                }
+                data: updateData
             });
 
             res.status(200).json(invoice);
@@ -121,7 +133,7 @@ export class InvoiceController {
     static async getUpcomingAlerts(req: any, res: Response, next: NextFunction) {
         try {
             const locationId = req.headers.location_id;
-
+            const {type}=req.query
             if (!locationId) {
                 res.status(400).json({ message: "Location ID required" });
                 return;
@@ -135,6 +147,7 @@ export class InvoiceController {
                 where: {
                     locationId: locationId,
                     status: 'pending',
+                    invoiceType:type,
                     dueDate: {
                         gte: today,
                         lte: threeDaysLater

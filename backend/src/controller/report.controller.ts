@@ -1,5 +1,6 @@
 import { Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
+import { qtyType } from "@prisma/client";
 
 export class ReportController {
     static async getSummary(req: any, res: Response, next: NextFunction) {
@@ -550,7 +551,6 @@ export class ReportController {
                 itemCode: item.itemCode,
                 itemName: item.itemName,
                 currentQty: Number(item.currentQty),
-                openingQty: Number(item.openingQty),
                 rol: Number(item.rol),
                 moq: Number(item.moq),
                 eoq: Number(item.eoq),
@@ -884,6 +884,66 @@ export class ReportController {
             });
 
             res.status(200).json(insights);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async getGroupedProducts(req: any, res: Response, next: NextFunction) {
+        try {
+            const locationId = req.headers.location_id;
+            if (!locationId) {
+                res.status(400).json({ message: "Location ID required" });
+                return; 
+            }
+
+            const items = await prisma.itemMaster.findMany({
+                where: { 
+                    locationId, 
+                    groupName: { not: null },
+                    isDisable: false
+                },
+                include: { type: true, supplier: true, group: true }
+            });
+
+            if (items.length === 0) {
+                res.status(200).json([]);
+                return;
+            }
+
+            const grouped: any = {};
+            items.forEach(item => {
+                const groupId = item.groupName as string;
+                const groupName = item.group?.typeName || 'Ungrouped';
+                
+                if (!grouped[groupId]) {
+                    grouped[groupId] = {
+                        groupId,
+                        groupName,
+                        totalQty: 0,
+                        qtyType: '',
+                        items: []
+                    };
+                }
+                
+                const packQty = Number(item.packQty || 0);
+                const currentQty = Number(item.currentQty);
+                grouped[groupId].totalQty += packQty * currentQty;
+                grouped[groupId].qtyType=item.quantityType;
+                grouped[groupId].items.push({
+                    itemId: item.itemId,
+                    itemCode: item.itemCode,
+                    itemName: item.itemName,
+                    packQty,
+                    currentQty,
+                    totalQty: packQty * currentQty,
+                    quantityType: item.quantityType,
+                    supplier: item.supplier?.supplierName,
+                    category: item.type?.typeName
+                });
+            });
+            console.log(grouped)
+            res.status(200).json(Object.values(grouped));
         } catch (err) {
             next(err);
         }

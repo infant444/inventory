@@ -15,18 +15,16 @@ export default (req: any, res: any, next: any) => {
         const decoderedUser = verify(token, process.env.JWT_USER_AUTH!) as AuthUser;
         req.user = decoderedUser;
     } catch (error) {
-         if (error instanceof TokenExpiredError) {
-      return res.status(300).json({
-        success: false,
-        message: "Token expired"
-      });
-    }
-
-    // 🔴 Invalid token
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token"
-    });
+        if (error instanceof TokenExpiredError) {
+            return res.status(300).json({
+                success: false,
+                message: "Token expired"
+            });
+        }
+        return res.status(401).json({
+            success: false,
+            message: "Invalid token"
+        });
     }
     return next();
 }

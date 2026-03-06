@@ -1,12 +1,11 @@
-/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, X, CheckCircle, AlertTriangle, Clock, Filter, Download } from 'lucide-react';
-import { invoiceAPI, supplierAPI } from '../services/api';
+import { Plus, Edit2, Trash2, X, CheckCircle, AlertTriangle, Clock, Filter } from 'lucide-react';
+import { categoriesAPI, invoiceAPI, supplierAPI } from '../services/api';
 import { useLoading } from '../context/LoadingContext';
 import { toast } from 'react-toastify';
 
-const PaymentTracker: React.FC = () => {
+const PaymentTrackerOffice: React.FC = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'overdue' | 'due_soon'>('all');
@@ -17,6 +16,7 @@ const PaymentTracker: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
   const [paymentMode, setPaymentMode] = useState('');
+  const [invoiceName, setInvoiceName] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     invoice_number: '',
     invoice_name: '',
@@ -32,18 +32,18 @@ const PaymentTracker: React.FC = () => {
     fetchInvoices();
     fetchSuppliers();
     fetchUpcomingAlerts();
+    fetchName();
   }, [filter]);
 
   const fetchInvoices = async () => {
     showLoading('Loading invoices...');
     try {
-      const params: any = { type: "purchase" };
+      const params: any = { type: "general" };
       if (filter === 'due_soon') {
         params.status = 'pending';
       } else if (filter !== 'all') {
         params.status = filter;
       }
-      console.log('Fetching invoices with params:', params);
       const response = await invoiceAPI.getAllInvoices(params);
       let filteredInvoices = response.data;
       
@@ -87,7 +87,7 @@ const PaymentTracker: React.FC = () => {
 
   const fetchUpcomingAlerts = async () => {
     try {
-      const response = await invoiceAPI.getUpcomingAlerts({type:'purchase'});
+      const response = await invoiceAPI.getUpcomingAlerts({type:'general'});
       if (response.data.length > 0) {
         setUpcomingAlerts(response.data);
         setShowAlertModal(true);
@@ -96,7 +96,16 @@ const PaymentTracker: React.FC = () => {
       console.error('Error fetching alerts:', error);
     }
   };
-
+  const fetchName=async()=>{
+    try {
+      const response=await categoriesAPI.getTypeCategories("financial");
+      setInvoiceName(response.data)
+      // console.log(response.data)
+      }
+      catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+  }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     showLoading(editingInvoice ? 'Updating invoice...' : 'Creating invoice...');
@@ -104,7 +113,7 @@ const PaymentTracker: React.FC = () => {
       const data = {
         ...formData,
         amount: parseFloat(formData.amount),
-        type:"purchase"
+        type:"general"
       };
 
       if (editingInvoice) {
@@ -202,42 +211,6 @@ const PaymentTracker: React.FC = () => {
     return diffDays;
   };
 
-  const downloadCSV = () => {
-    if (invoices.length === 0) {
-      toast.error('No data to download');
-      return;
-    }
-
-    const data = invoices.map(invoice => ({
-      'Invoice Number': invoice.invoiceNumber,
-      'Invoice Name': invoice.invoiceName,
-      'Supplier': suppliers.find(s => s.supplierId === invoice.supplierId)?.supplierName || '-',
-      'Amount': invoice.amount,
-      'Invoice Date': new Date(invoice.invoiceDate).toLocaleDateString(),
-      'Due Date': new Date(invoice.dueDate).toLocaleDateString(),
-      'Days Until Due': getDaysUntilDue(invoice.dueDate),
-      'Status': invoice.status === 'paid' ? 'Paid' : getDaysUntilDue(invoice.dueDate) < 0 ? 'Overdue' : getDaysUntilDue(invoice.dueDate) <= 3 ? 'Due Soon' : 'Pending',
-      'Payment Mode': invoice.paymentMode || '-',
-      'Paid Date': invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : '-',
-      'Notes': invoice.notes || '-'
-    }));
-
-    const headers = Object.keys(data[0]);
-    const csv = [
-      headers.join(','),
-      ...data.map(row => headers.map(h => `"${row[h as keyof typeof row]}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `payment-tracker-${filter}-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    toast.success('CSV downloaded successfully');
-  };
-
   const getStatusBadge = (invoice: any) => {
     const daysUntilDue = getDaysUntilDue(invoice.dueDate);
     
@@ -255,17 +228,11 @@ const PaymentTracker: React.FC = () => {
   return (
     <div className="">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Payment Tracker</h1>
-        <div className="flex gap-2">
-          <button onClick={downloadCSV} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
-            <Download size={20} />
-            Download CSV
-          </button>
-          <button onClick={() => openModal()} className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
-            <Plus size={20} />
-            Add Invoice
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900">In Office Payment Tracker</h1>
+        <button onClick={() => openModal()} className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+          <Plus size={20} />
+          Add Invoice
+        </button>
       </div>
 
       {/* Filters */}
@@ -359,9 +326,14 @@ const PaymentTracker: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Name *</label>
-                  <input type="text" required value={formData.invoice_name} onChange={(e) => setFormData({ ...formData, invoice_name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  <select required value={formData.invoice_name} onChange={(e) => setFormData({ ...formData, invoice_name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" >
+                    <option value="">Select Invoice Name</option>
+                    {invoiceName.map((name) => (
+                      <option key={name.typeId} value={name.typeName}>{name.typeName}</option>
+                    ))}
+                  </select>
                 </div>
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
                   <select value={formData.supplier_id} onChange={(e) => setFormData({ ...formData, supplier_id: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">Select Supplier</option>
@@ -369,7 +341,7 @@ const PaymentTracker: React.FC = () => {
                       <option key={supplier.supplierId} value={supplier.supplierId}>{supplier.supplierName}</option>
                     ))}
                   </select>
-                </div>
+                </div> */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
                   <input type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
@@ -475,4 +447,4 @@ const PaymentTracker: React.FC = () => {
   );
 };
 
-export default PaymentTracker;
+export default PaymentTrackerOffice;
