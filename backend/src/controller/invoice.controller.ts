@@ -1,5 +1,6 @@
 import { Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
+import { transporter, mailGenerator } from "../config/email.config";
 
 export class InvoiceController {
     static async createInvoice(req: any, res: Response, next: NextFunction) {
@@ -157,6 +158,76 @@ export class InvoiceController {
             });
 
             res.status(200).json(upcomingInvoices);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async sendInvoiceEmail(req: any, res: Response, next: NextFunction) {
+        try {
+            const { emails, start_date, end_date, type } = req.body;
+            const locationId = req.headers.location_id;
+
+            if (!locationId) {
+                res.status(400).json({ message: "Location ID required" });
+                return;
+            }
+
+            const whereClause: any = { locationId: locationId, invoiceType: type };
+            if (start_date && end_date) {
+                whereClause.invoiceDate = {
+                    gte: new Date(start_date),
+                    lte: new Date(end_date)
+                };
+            }
+
+            const invoices = await prisma.invoice.findMany({
+                where: whereClause,
+                orderBy: { invoiceDate: 'desc' }
+            });
+
+            const emailList = emails.split(',').map((e: string) => e.trim()).filter((e: string) => e);
+            
+            const tableRows = invoices.map(inv => `
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${inv.invoiceNumber}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${inv.invoiceName}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">₹${parseFloat(inv.amount.toString()).toFixed(2)}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${new Date(inv.invoiceDate).toLocaleDateString()}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${new Date(inv.dueDate).toLocaleDateString()}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${inv.status}</td>
+                </tr>
+            `).join('');
+
+            const template = {
+                body: {
+                    intro: `Invoice Report (${new Date(start_date).toLocaleDateString()} - ${new Date(end_date).toLocaleDateString()})`,
+                    table: {
+                        data: invoices.map(inv => ({
+                            'Invoice #': inv.invoiceNumber,
+                            'Name': inv.invoiceName,
+                            'Amount': `₹${parseFloat(inv.amount.toString()).toFixed(2)}`,
+                            'Invoice Date': new Date(inv.invoiceDate).toLocaleDateString(),
+                            'Due Date': new Date(inv.dueDate).toLocaleDateString(),
+                            'Status': inv.status
+                        }))
+                    },
+                    outro: `Total Invoices: ${invoices.length}`
+                }
+            };
+
+            const mail = mailGenerator.generate(template);
+
+            for (const email of emailList) {
+                await transporter.sendMail({
+                    from: '"ABC Company" <riplanit@gmail.com>',
+                    to: email,
+                    subject: `Invoice Report - ${type === 'general' ? 'Office' : 'Purchase'} Payments`,
+                    html: mail
+                });
+            }
+
+            res.status(200).json({ message: "Email sent successfully" });
         } catch (err) {
             next(err);
         }

@@ -13,5 +13,6 @@ route.put("/update/:invoiceId", asyncHandler(InvoiceController.updateInvoice));
 route.put("/mark-paid/:invoiceId", asyncHandler(InvoiceController.markAsPaid));
 route.delete("/delete/:invoiceId", asyncHandler(InvoiceController.deleteInvoice));
 route.get("/upcoming-alerts", asyncHandler(InvoiceController.getUpcomingAlerts));
+route.post("/send-email", asyncHandler(InvoiceController.sendInvoiceEmail));
 
 export default route;

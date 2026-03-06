@@ -135,6 +135,7 @@ export const invoiceAPI = {
   markAsPaid: (invoiceId: string, data: any) => api.put(`/invoice/mark-paid/${invoiceId}`, data),
   deleteInvoice: (invoiceId: string) => api.delete(`/invoice/delete/${invoiceId}`),
   getUpcomingAlerts: (params?:any) => api.get('/invoice/upcoming-alerts',{params}),
+  sendInvoiceEmail: (data: any) => api.post('/invoice/send-email', data),
 };
 
 export const dashboardAPI = {

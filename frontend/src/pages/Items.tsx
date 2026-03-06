@@ -9,6 +9,7 @@ import {
   Eye,
   Download,
   Shuffle,
+  FileDown,
 } from "lucide-react";
 import {
   itemAPI,
@@ -21,6 +22,9 @@ import { useLoading } from "../context/LoadingContext";
 import { toast } from "react-toastify";
 import BarcodeComponent from "../components/BarcodeComponent";
 import { generateBarcodeSheet } from "../utils/BarcodeSheetGenerator";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import JsBarcode from 'jsbarcode';
 
 interface Item {
   itemId: string;
@@ -308,17 +312,96 @@ const Items: React.FC = () => {
     setFormData({ ...formData, barcode: generatedBarcode });
   };
 
+  const exportToPDF = async () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text('Items List', 14, 20);
+    
+    const tableData = await Promise.all(items.map(async (item) => {
+      if (item.barcode) {
+        const canvas = document.createElement('canvas');
+        JsBarcode(canvas, item.barcode, {
+          format: 'CODE128',
+          width: 2,
+          height: 50,
+          displayValue: true,
+          fontSize: 12,
+          margin: 5
+        });
+        return {
+          itemCode: item.itemCode,
+          itemName: item.itemName,
+          barcodeImg: canvas.toDataURL('image/png')
+        };
+      }
+      return {
+        itemCode: item.itemCode,
+        itemName: item.itemName,
+        barcodeImg: null
+      };
+    }));
+    
+    autoTable(doc, {
+      head: [['Item Code', 'Item Name', 'Barcode']],
+      body: tableData.map(item => [item.itemCode, item.itemName, '']),
+      startY: 30,
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246], halign: 'center' },
+      columnStyles: {
+        0: { cellWidth: 35, halign: 'left' },
+        1: { cellWidth: 75, halign: 'left' },
+        2: { cellWidth: 70, halign: 'center' }
+      },
+      styles: {
+        minCellHeight: 20
+      },
+      didDrawCell: (data: any) => {
+        if (data.column.index === 2 && data.cell.section === 'body') {
+          const rowData = tableData[data.row.index];
+          if (rowData.barcodeImg) {
+            const imgWidth = 65;
+            const imgHeight = 18;
+            const xPos = data.cell.x + (data.cell.width - imgWidth) / 2;
+            const yPos = data.cell.y + (data.cell.height - imgHeight) / 2;
+            
+            doc.addImage(
+              rowData.barcodeImg,
+              'PNG',
+              xPos,
+              yPos,
+              imgWidth,
+              imgHeight
+            );
+          }
+        }
+      }
+    });
+    
+    doc.save('items-with-barcodes.pdf');
+    toast.success('PDF exported successfully');
+  };
+
   return (
     <div className="">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Items Management</h1>
-        <button
-          onClick={() => openModal()}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-        >
-          <Plus size={20} />
-          <span>Add New Item</span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={exportToPDF}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <FileDown size={20} />
+            <span>Export PDF</span>
+          </button>
+          <button
+            onClick={() => openModal()}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <Plus size={20} />
+            <span>Add New Item</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">

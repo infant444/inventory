@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, X, CheckCircle, AlertTriangle, Clock, Filter, Download } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, CheckCircle, AlertTriangle, Clock, Filter, Download, Mail } from 'lucide-react';
 import { invoiceAPI, supplierAPI } from '../services/api';
 import { useLoading } from '../context/LoadingContext';
 import { toast } from 'react-toastify';
@@ -10,6 +10,9 @@ const PaymentTracker: React.FC = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'overdue' | 'due_soon'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | '7days' | '30days' | 'year' | 'custom'>('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const [upcomingAlerts, setUpcomingAlerts] = useState<any[]>([]);
@@ -17,6 +20,10 @@ const PaymentTracker: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
   const [paymentMode, setPaymentMode] = useState('');
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailStartDate, setEmailStartDate] = useState('');
+  const [emailEndDate, setEmailEndDate] = useState('');
+  const [emailList, setEmailList] = useState('');
   const [formData, setFormData] = useState({
     invoice_number: '',
     invoice_name: '',
@@ -32,7 +39,7 @@ const PaymentTracker: React.FC = () => {
     fetchInvoices();
     fetchSuppliers();
     fetchUpcomingAlerts();
-  }, [filter]);
+  }, [filter, dateFilter, customStartDate, customEndDate]);
 
   const fetchInvoices = async () => {
     showLoading('Loading invoices...');
@@ -43,12 +50,51 @@ const PaymentTracker: React.FC = () => {
       } else if (filter !== 'all') {
         params.status = filter;
       }
-      console.log('Fetching invoices with params:', params);
+      
       const response = await invoiceAPI.getAllInvoices(params);
       let filteredInvoices = response.data;
       
+      // Apply date filter
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (dateFilter === 'today') {
+        filteredInvoices = filteredInvoices.filter((inv: any) => {
+          const invDate = new Date(inv.invoiceDate);
+          invDate.setHours(0, 0, 0, 0);
+          return invDate.getTime() === today.getTime();
+        });
+      } else if (dateFilter === '7days') {
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 7);
+        filteredInvoices = filteredInvoices.filter((inv: any) => {
+          const invDate = new Date(inv.invoiceDate);
+          return invDate >= sevenDaysAgo && invDate <= today;
+        });
+      } else if (dateFilter === '30days') {
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        filteredInvoices = filteredInvoices.filter((inv: any) => {
+          const invDate = new Date(inv.invoiceDate);
+          return invDate >= thirtyDaysAgo && invDate <= today;
+        });
+      } else if (dateFilter === 'year') {
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setFullYear(today.getFullYear() - 1);
+        filteredInvoices = filteredInvoices.filter((inv: any) => {
+          const invDate = new Date(inv.invoiceDate);
+          return invDate >= oneYearAgo && invDate <= today;
+        });
+      } else if (dateFilter === 'custom' && customStartDate && customEndDate) {
+        const start = new Date(customStartDate);
+        const end = new Date(customEndDate);
+        filteredInvoices = filteredInvoices.filter((inv: any) => {
+          const invDate = new Date(inv.invoiceDate);
+          return invDate >= start && invDate <= end;
+        });
+      }
+      
       if (filter === 'due_soon') {
-        const today = new Date();
         const threeDaysLater = new Date();
         threeDaysLater.setDate(today.getDate() + 3);
         filteredInvoices = filteredInvoices.filter((inv: any) => {
@@ -57,7 +103,6 @@ const PaymentTracker: React.FC = () => {
         });
       }
       
-      // Sort: due soon at top
       filteredInvoices.sort((a: any, b: any) => {
         const aDays = getDaysUntilDue(a.dueDate);
         const bDays = getDaysUntilDue(b.dueDate);
@@ -252,11 +297,44 @@ const PaymentTracker: React.FC = () => {
     }
   };
 
+  const handleSendEmail = async () => {
+    if (!emailStartDate || !emailEndDate) {
+      toast.error('Please select date range');
+      return;
+    }
+    if (!emailList.trim()) {
+      toast.error('Please enter email addresses');
+      return;
+    }
+    showLoading('Sending email...');
+    try {
+      await invoiceAPI.sendInvoiceEmail({
+        emails: emailList,
+        start_date: emailStartDate,
+        end_date: emailEndDate,
+        type: 'purchase'
+      });
+      toast.success('Email sent successfully');
+      setShowEmailModal(false);
+      setEmailList('');
+      setEmailStartDate('');
+      setEmailEndDate('');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to send email');
+    } finally {
+      hideLoading();
+    }
+  };
+
   return (
     <div className="">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Payment Tracker</h1>
         <div className="flex gap-2">
+          <button onClick={() => setShowEmailModal(true)} className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+            <Mail size={20} />
+            Send Email
+          </button>
           <button onClick={downloadCSV} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
             <Download size={20} />
             Download CSV
@@ -270,20 +348,41 @@ const PaymentTracker: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-        <div className="flex items-center gap-2">
-          <Filter size={20} className="text-gray-500" />
-          <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg transition-colors ${filter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}>
-            All
-          </button>
-          <button onClick={() => setFilter('due_soon')} className={`px-4 py-2 rounded-lg transition-colors ${filter === 'due_soon' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700'}`}>
-            Due Soon
-          </button>
-          <button onClick={() => setFilter('pending')} className={`px-4 py-2 rounded-lg transition-colors ${filter === 'pending' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}>
-            To Be Paid
-          </button>
-          <button onClick={() => setFilter('paid')} className={`px-4 py-2 rounded-lg transition-colors ${filter === 'paid' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'}`}>
-            Paid
-          </button>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Filter size={20} className="text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Status:</span>
+            <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg transition-colors ${filter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}>
+              All
+            </button>
+            <button onClick={() => setFilter('due_soon')} className={`px-4 py-2 rounded-lg transition-colors ${filter === 'due_soon' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700'}`}>
+              Due Soon
+            </button>
+            <button onClick={() => setFilter('pending')} className={`px-4 py-2 rounded-lg transition-colors ${filter === 'pending' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}>
+              To Be Paid
+            </button>
+            <button onClick={() => setFilter('paid')} className={`px-4 py-2 rounded-lg transition-colors ${filter === 'paid' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'}`}>
+              Paid
+            </button>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-medium text-gray-700">Date Range:</span>
+            <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value as any)} className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="year">Last Year</option>
+              <option value="custom">Custom Range</option>
+            </select>
+            {dateFilter === 'custom' && (
+              <>
+                <input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Start Date" />
+                <span className="text-gray-500">to</span>
+                <input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="End Date" />
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -468,6 +567,42 @@ const PaymentTracker: React.FC = () => {
             <button onClick={() => setShowAlertModal(false)} className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
               Got it
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Send Invoice Report</h2>
+              <button onClick={() => setShowEmailModal(false)} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
+                <input type="date" value={emailStartDate} onChange={(e) => setEmailStartDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
+                <input type="date" value={emailEndDate} onChange={(e) => setEmailEndDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email Addresses * (comma separated)</label>
+                <textarea value={emailList} onChange={(e) => setEmailList(e.target.value)} rows={3} placeholder="email1@example.com, email2@example.com" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button onClick={() => setShowEmailModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  Cancel
+                </button>
+                <button onClick={handleSendEmail} className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600">
+                  Send Email
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
