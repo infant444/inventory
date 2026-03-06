@@ -260,7 +260,7 @@ const PaymentTracker: React.FC = () => {
       'Amount': invoice.amount,
       'Invoice Date': new Date(invoice.invoiceDate).toLocaleDateString(),
       'Due Date': new Date(invoice.dueDate).toLocaleDateString(),
-      'Days Until Due': getDaysUntilDue(invoice.dueDate),
+      'Days Until Due': getDaysUntilDue(invoice.dueDate)>0?getDaysUntilDue(invoice.dueDate):"Due Over",
       'Status': invoice.status === 'paid' ? 'Paid' : getDaysUntilDue(invoice.dueDate) < 0 ? 'Overdue' : getDaysUntilDue(invoice.dueDate) <= 3 ? 'Due Soon' : 'Pending',
       'Payment Mode': invoice.paymentMode || '-',
       'Paid Date': invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : '-',
