@@ -55,8 +55,8 @@ function AppRoutes() {
 
   const getDefaultRoute = () => {
     if (!user) return "/dashboard";
-    if (user.role === "staff") return "/dashboard/checkin";
-    if (user.role === "analyzer") return "/dashboard/reports";
+    if (user.role === "staff") return "/checkin";
+    if (user.role === "analyzer") return "/reports";
     return "/dashboard";
   };
 

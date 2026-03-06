@@ -35,9 +35,9 @@ const Login: React.FC = () => {
         login(userData);
         const role = userData.role;
         if (role === 'staff') {
-          navigate('/dashboard/checkin-checkout');
+          navigate('/checkin');
         } else if (role === 'analyzer') {
-          navigate('/dashboard/reports');
+          navigate('/reports');
         } else {
           navigate('/dashboard');
         }
@@ -56,9 +56,9 @@ const Login: React.FC = () => {
       const userData = JSON.parse(storedUser);
       const role = userData.role;
       if (role === 'staff') {
-        navigate('/dashboard/checkin-checkout');
+        navigate('/checkin');
       } else if (role === 'analyzer') {
-        navigate('/dashboard/reports');
+        navigate('/reports');
       } else {
         navigate('/dashboard');
       }
