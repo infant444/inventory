@@ -483,7 +483,7 @@ const Reports: React.FC = () => {
               {charts.topCheckIn.map((product: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">{product.name}</span>
-                  <span className="text-sm font-semibold text-green-600">{product.quantity} {product.quantityType}</span>
+                  <span className="text-sm font-semibold text-green-600">{product.quantity} pack</span>
                 </div>
               ))}
             </div>
@@ -495,7 +495,7 @@ const Reports: React.FC = () => {
               {charts.topCheckOut.map((product: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">{product.name}</span>
-                  <span className="text-sm font-semibold text-blue-600">{product.quantity} {product.quantityType}</span>
+                  <span className="text-sm font-semibold text-blue-600">{product.quantity} pack</span>
                 </div>
               ))}
             </div>
@@ -542,7 +542,7 @@ const Reports: React.FC = () => {
                         {t.type.toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{`${String(t.quantity).padStart(3,'0')} ${t.quantityType}`}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{`${String(t.quantity).padStart(2,'0')} pack`}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">₹{t.price.toFixed(2)}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{t.taxPercent}%</td>
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">₹{t.totalAmount.toFixed(2)}</td>
