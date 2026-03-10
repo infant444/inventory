@@ -76,7 +76,7 @@ const DashboardLayout: React.FC = () => {
     { icon: ArrowDownCircle, label: 'Check-In', path: '/checkin', roles: ['admin', 'staff'] },
     { icon: ArrowUpCircle, label: 'Check-Out', path: '/checkout', roles: ['admin', 'staff'] },
     { icon: CreditCard, label: 'Payment Tracker', path: '/payment-tracker', roles: ['admin', 'manager','analyzer'] },
-    { icon: Calculator, label: 'Office Payment', path: '/payment-tracker-office', roles: ['admin', 'manager','analyzer'] },
+    { icon: Calculator, label: 'Expense Tracker', path: '/payment-tracker-office', roles: ['admin', 'manager','analyzer'] },
     { icon: FileText, label: 'Reports', path: '/reports', roles: ['admin', 'manager','analyzer'] },
     {icon:Group, label:"Group", path:"/grouped-products", roles: ['admin', 'manager','analyzer']},
     { icon: MapPin, label: 'Locations', path: '/locations', roles: ['admin'] },

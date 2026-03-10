@@ -70,7 +70,6 @@ const Items: React.FC = () => {
   const [formData, setFormData] = useState({
     item_code: "",
     item_name: "",
-    opening_qty: "",
     barcode: "",
     supplier_id: "",
     type_id: "",
@@ -78,6 +77,7 @@ const Items: React.FC = () => {
     location_id: "",
     purchase_price: "",
     tax_percent: "",
+    current_qty: "",
     rol: "",
     moq: "",
     eoq: "",
@@ -165,20 +165,18 @@ const Items: React.FC = () => {
     try {
       const data = {
         ...formData,
-        opening_qty: parseInt(formData.opening_qty),
         purchase_price: parseFloat(formData.purchase_price),
         tax_percent:
           parseFloat(
             taxes.find((s) => s.taxId == formData.tax_id)?.taxPercentage,
           ) || 0,
+        current_qty: formData.current_qty ? parseFloat(formData.current_qty) : 0,
         rol: parseInt(formData.rol),
         moq: parseInt(formData.moq),
         eoq: parseInt(formData.eoq),
         defaultIncrease: parseFloat(formData.defaultIncrease),
         defaultDecrease: parseFloat(formData.defaultDecrease),
-        packQty: formData.packQty
-          ? parseInt(formData.packQty)
-          : undefined,
+        packQty: formData.packQty ? parseFloat(formData.packQty) : undefined,
         groupName: formData.groupName || undefined,
       };
       console.log(data);
@@ -221,7 +219,6 @@ const Items: React.FC = () => {
       setFormData({
         item_code: item.itemCode,
         item_name: item.itemName,
-        opening_qty: item.openingQty.toString(),
         barcode: item.barcode || "",
         supplier_id: item.supplierId || "",
         type_id: item.typeId || "",
@@ -229,6 +226,7 @@ const Items: React.FC = () => {
         location_id: item.locationId || "",
         purchase_price: item.purchasePrice.toString(),
         tax_percent: item.taxPercent.toString(),
+        current_qty: item.currentQty?.toString() || "",
         rol: item.rol?.toString() || "",
         moq: item.moq?.toString() || "",
         eoq: item.eoq?.toString() || "",
@@ -243,7 +241,6 @@ const Items: React.FC = () => {
       setFormData({
         item_code: "",
         item_name: "",
-        opening_qty: "",
         barcode: "",
         supplier_id: "",
         type_id: "",
@@ -251,6 +248,7 @@ const Items: React.FC = () => {
         location_id: "",
         purchase_price: "",
         tax_percent: "",
+        current_qty: "",
         rol: "",
         moq: "",
         eoq: "",
@@ -270,7 +268,6 @@ const Items: React.FC = () => {
     setFormData({
       item_code: "",
       item_name: "",
-      opening_qty: "",
       barcode: "",
       supplier_id: "",
       type_id: "",
@@ -278,6 +275,7 @@ const Items: React.FC = () => {
       location_id: "",
       purchase_price: "",
       tax_percent: "",
+      current_qty: "",
       rol: "",
       moq: "",
       eoq: "",
@@ -697,25 +695,27 @@ const Items: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quantity *
+                    Current Quantity
                   </label>
                   <input
                     type="number"
-                    required
+                    step="0.01"
+                    min="0"
+                    value={formData.current_qty}
                     onChange={(e) =>
-                      setFormData({ ...formData, opening_qty: e.target.value })
-                    }                    value={formData.opening_qty}
+                      setFormData({ ...formData, current_qty: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    
                   />
-                 
                 </div>
-                 <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Pack Quantity
                   </label>
                   <input
                     type="number"
+                    step="0.01"
+                    min="0"
                     value={formData.packQty}
                     onChange={(e) =>
                       setFormData({ ...formData, packQty: e.target.value })
@@ -853,6 +853,7 @@ const Items: React.FC = () => {
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     required
                     value={formData.purchase_price}
                     onChange={(e) =>
@@ -871,6 +872,7 @@ const Items: React.FC = () => {
                   </label>
                   <input
                     type="number"
+                    min="0"
                     value={formData.rol}
                     onChange={(e) =>
                       setFormData({ ...formData, rol: e.target.value })
@@ -884,6 +886,7 @@ const Items: React.FC = () => {
                   </label>
                   <input
                     type="number"
+                    min="0"
                     value={formData.moq}
                     onChange={(e) =>
                       setFormData({ ...formData, moq: e.target.value })
@@ -897,6 +900,7 @@ const Items: React.FC = () => {
                   </label>
                   <input
                     type="number"
+                    min="0"
                     value={formData.eoq}
                     onChange={(e) =>
                       setFormData({ ...formData, eoq: e.target.value })
@@ -910,6 +914,7 @@ const Items: React.FC = () => {
                   </label>
                   <input
                     type="number"
+                    min="0"
                     value={formData.defaultIncrease}
                     onChange={(e) =>
                       setFormData({
@@ -926,6 +931,7 @@ const Items: React.FC = () => {
                   </label>
                   <input
                     type="number"
+                    min="0"
                     value={formData.defaultDecrease}
                     onChange={(e) =>
                       setFormData({

@@ -4,7 +4,7 @@ import { prisma } from "../lib/prisma";
 export class ItemController {
     static async addItem(req: Request, res: Response, next: NextFunction) {
         try {
-            const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent, rol, moq, eoq,quantityType,defaultIncrease,defaultDecrease,packQty,packCount,groupName } = req.body;
+            const { item_code, item_name, location_id, current_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent, rol, moq, eoq,quantityType,defaultIncrease,defaultDecrease,packQty,packCount,groupName } = req.body;
             
             const existingItem = await prisma.itemMaster.findFirst({
                 where: {
@@ -24,7 +24,7 @@ export class ItemController {
                     itemCode: item_code,
                     itemName: item_name,
                     locationId: location_id,
-                    currentQty: opening_qty,
+                    currentQty: current_qty,
                     barcode: barcode,
                     supplierId: supplier_id,
                     typeId: type_id,
@@ -63,7 +63,8 @@ export class ItemController {
                     location: true,
                     supplier: true,
                     type: true,
-                    tax: true
+                    tax: true,
+                    group: true
                 }
             })
             res.status(200).json(items)
@@ -156,7 +157,7 @@ export class ItemController {
     static async updateItem(req: any, res: Response, next: NextFunction) {
         try {
             const id = req.params.itemId;
-            const { item_code, item_name, location_id, opening_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent,packQty,groupName } = req.body;
+            const { item_code, item_name, location_id, current_qty, barcode, supplier_id, type_id, tax_id, purchase_price, tax_percent,packQty,groupName } = req.body;
              const { rol, moq, eoq,defaultDecrease,defaultIncrease,quantityType } = req.body;
 
             const total_amount = purchase_price + (purchase_price * tax_percent) / 100;

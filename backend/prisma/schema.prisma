@@ -79,14 +79,14 @@ model SupplierMaster {
 
 model TypeMaster {
   typeId      String       @id @default(uuid()) @map("type_id") @db.Uuid
-  typeName    String       @unique @map("type_name") @db.VarChar(100)
+  typeName    String       @map("type_name") @db.VarChar(100)
   description String?
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
   type        categoryType @default(item) 
   items       ItemMaster[] @relation("ItemType")
   groupItems  ItemMaster[] @relation("ItemGroup")
-
+  @@unique([typeName, type])
   @@map("type_master")
 }
 
