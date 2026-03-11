@@ -90,15 +90,7 @@ const Items: React.FC = () => {
   });
   const { showLoading, hideLoading } = useLoading();
 
-  const QTY_TYPES: string[] = [
-    "gram",
-    "milliliter",
-    "kilogram",
-    "milligram",
-    "liter",
-    "bottle",
-    "can",
-  ];
+ 
   useEffect(() => {
     fetchItems();
     fetchSuppliers();
@@ -487,7 +479,7 @@ const Items: React.FC = () => {
                       {item.eoq || "-"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      ₹{item.totalAmount}
+                      €{item.totalAmount}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {item.supplier?.supplierName || "-"}
@@ -575,7 +567,7 @@ const Items: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-500 mb-1">
                   Purchase Price
                 </label>
-                <p className="text-gray-900">₹{viewingItem.purchasePrice}</p>
+                <p className="text-gray-900">€{viewingItem.purchasePrice}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

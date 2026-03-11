@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowDownCircle, Printer, X, Scan, Trash2, ShoppingCart } from 'lucide-react';
+import { Search, ArrowDownCircle, Printer, X, Trash2, ShoppingCart } from 'lucide-react';
 import { itemAPI, productAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from '../context/LocationContext';
@@ -10,7 +10,6 @@ import { toast } from 'react-toastify';
 const CheckIn: React.FC = () => {
   const [searchValue, setSearchValue] = useState('');
   const [scannedItems, setScannedItems] = useState<any[]>([]);
-  const [showScanner, setShowScanner] = useState(false);
   const [showBill, setShowBill] = useState(false);
   const [billData, setBillData] = useState<any>(null);
   const [todayStats, setTodayStats] = useState({ checkInCount: 0, checkOutCount: 0 });
@@ -181,12 +180,12 @@ const CheckIn: React.FC = () => {
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 autoFocus
               />
-              <button
+              {/* <button
                 onClick={() => setShowScanner(true)}
                 className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 <Scan size={20} />
-              </button>
+              </button> */}
             </div>
             <button
               onClick={handleSearch}
@@ -300,7 +299,7 @@ const CheckIn: React.FC = () => {
                 {billData.items?.map((item: any, idx: number) => (
                   <div key={idx} className="flex justify-between text-sm">
                     <span>{item.itemName} x{item.quantity}</span>
-                    <span>₹{(item.price * item.quantity).toFixed(2)}</span>
+                    <span>â‚¬{(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -312,7 +311,7 @@ const CheckIn: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">
                   <span>Total:</span>
-                  <span>₹{billData.totalAmount.toFixed(2)}</span>
+                  <span>â‚¬{billData.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -355,3 +354,4 @@ const CheckIn: React.FC = () => {
 };
 
 export default CheckIn;
+

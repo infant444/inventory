@@ -19,7 +19,6 @@ import {
   LogOut,
   User,
   Bell,
-  ChevronDown,
   Settings as SettingsIcon,
   FileText,
   CreditCard,
@@ -30,7 +29,7 @@ import {
 
 const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  // const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [availableLocations, setAvailableLocations] = useState<any[]>([]);
   const { user, logout } = useAuth();
   const { selectedLocation, setSelectedLocation } = useSelectedLocation();
@@ -58,10 +57,10 @@ const DashboardLayout: React.FC = () => {
     return <LocationSelector />;
   }
 
-  const handleLocationChange = (location: any) => {
-    setSelectedLocation(location);
-    setShowLocationDropdown(false);
-  };
+  // const handleLocationChange = (location: any) => {
+  //   setSelectedLocation(location);
+  //   setShowLocationDropdown(false);
+  // };
 
   const handleLogout = () => {
     authAPI.logout();

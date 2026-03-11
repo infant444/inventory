@@ -408,7 +408,7 @@ const PaymentTracker: React.FC = () => {
                 <tr key={invoice.invoiceId} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{invoice.invoiceNumber}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">{invoice.invoiceName}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">₹{parseFloat(invoice.amount).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">€{parseFloat(invoice.amount).toFixed(2)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{new Date(invoice.dueDate).toLocaleDateString()}</td>
                   <td className="px-6 py-4">{getStatusBadge(invoice)}</td>
@@ -551,7 +551,7 @@ const PaymentTracker: React.FC = () => {
                     <div>
                       <p className="font-semibold text-gray-900">{invoice.invoiceName}</p>
                       <p className="text-sm text-gray-600">Invoice: {invoice.invoiceNumber}</p>
-                      <p className="text-sm text-gray-600">Amount: ₹{parseFloat(invoice.amount).toFixed(2)}</p>
+                      <p className="text-sm text-gray-600">Amount: €{parseFloat(invoice.amount).toFixed(2)}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold text-orange-600">

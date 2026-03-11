@@ -76,15 +76,15 @@ const GroupedProducts: React.FC = () => {
       return;
     }
 
-    let csvContent = `"Total Inventory Worth","₹${totalInventoryWorth.toFixed(2)}"\n\n`;
+    let csvContent = `"Total Inventory Worth","€${totalInventoryWorth.toFixed(2)}"\n\n`;
 
     groupedItems.forEach((group) => {
-      csvContent += `"${group.groupName}","Total: ${formatQuantity(group.totalQty, group.qtyType)}","Worth: ₹${group.totalWorth.toFixed(2)}","${group.items.length} items"\n`;
+      csvContent += `"${group.groupName}","Total: ${formatQuantity(group.totalQty, group.qtyType)}","Worth: €${group.totalWorth.toFixed(2)}","${group.items.length} items"\n`;
       csvContent += "Item Code,Item Name,Pack Qty,Current Qty,Total Quantity,Purchase Price,Item Worth,Supplier,Category\n";
       
       group.items.forEach((item: any) => {
         const converted = convertToBaseUnit(item.totalQty, item.quantityType);
-        csvContent += `"${item.itemCode}","${item.itemName}","${item.packQty}","${item.currentQty} units","${converted.value.toFixed(2)} ${converted.unit}","₹${item.purchasePrice.toFixed(2)}","₹${item.itemWorth.toFixed(2)}","${item.supplier || '-'}","${item.category || '-'}"\n`;
+        csvContent += `"${item.itemCode}","${item.itemName}","${item.packQty}","${item.currentQty} units","${converted.value.toFixed(2)} ${converted.unit}","€${item.purchasePrice.toFixed(2)}","€${item.itemWorth.toFixed(2)}","${item.supplier || '-'}","${item.category || '-'}"\n`;
       });
       
       csvContent += "\n";
@@ -110,7 +110,7 @@ const GroupedProducts: React.FC = () => {
           <div className="flex items-center gap-2 mt-2">
             <DollarSign className="text-green-600" size={20} />
             <p className="text-lg font-semibold text-green-600">
-              Total Inventory Worth: ₹{totalInventoryWorth.toFixed(2)}
+              Total Inventory Worth: €{totalInventoryWorth.toFixed(2)}
             </p>
           </div>
         </div>
@@ -165,7 +165,7 @@ const GroupedProducts: React.FC = () => {
                         {formatQuantity(group.totalQty, group.qtyType)}
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-green-600">
-                        ₹{group.totalWorth.toFixed(2)}
+                        €{group.totalWorth.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {group.items.length} item(s)
@@ -226,11 +226,11 @@ const GroupedProducts: React.FC = () => {
                                     </div>
                                     <div className="flex justify-between text-xs">
                                       <span className="text-gray-600">Price/Unit:</span>
-                                      <span className="font-medium text-gray-900">₹{item.purchasePrice.toFixed(2)}</span>
+                                      <span className="font-medium text-gray-900">€{item.purchasePrice.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-xs border-t pt-1">
                                       <span className="text-gray-600 font-semibold">Item Worth:</span>
-                                      <span className="font-semibold text-green-600">₹{item.itemWorth.toFixed(2)}</span>
+                                      <span className="font-semibold text-green-600">€{item.itemWorth.toFixed(2)}</span>
                                     </div>
                                     {item.supplier && (
                                       <div className="flex justify-between text-xs">

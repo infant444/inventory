@@ -186,7 +186,7 @@ const Dashboard: React.FC = () => {
                     <p className="text-xs text-gray-500">{invoice.invoiceNumber}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">₹{Number(invoice.amount).toFixed(2)}</p>
+                    <p className="text-sm font-semibold">€{Number(invoice.amount).toFixed(2)}</p>
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       invoice.status === 'paid' ? 'bg-green-100 text-green-700' :
                       invoice.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :

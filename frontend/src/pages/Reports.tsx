@@ -470,7 +470,7 @@ const Reports: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Check-In</p>
-                <p className="text-2xl font-bold text-green-600 mt-1">₹{summary.totalCheckInAmount.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-green-600 mt-1">€{summary.totalCheckInAmount.toFixed(2)}</p>
                 <p className="text-xs text-gray-500 mt-1">{summary.totalCheckInQty} items</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -483,7 +483,7 @@ const Reports: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Check-Out</p>
-                <p className="text-2xl font-bold text-blue-600 mt-1">₹{summary.totalCheckOutAmount.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-blue-600 mt-1">€{summary.totalCheckOutAmount.toFixed(2)}</p>
                 <p className="text-xs text-gray-500 mt-1">{summary.totalCheckOutQty} items</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -497,7 +497,7 @@ const Reports: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Revenue (Profit)</p>
                 <p className={`text-2xl font-bold mt-1 ${summary.revenue >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
-                  ₹{summary.revenue.toFixed(2)}
+                  €{summary.revenue.toFixed(2)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">CheckOut - CheckIn</p>
               </div>
@@ -532,8 +532,8 @@ const Reports: React.FC = () => {
                 <div key={idx} className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">{new Date(day.date).toLocaleDateString()}</span>
                   <div className="flex gap-4">
-                    <span className="text-green-600">In: ₹{day.checkIn.toFixed(2)}</span>
-                    <span className="text-blue-600">Out: ₹{day.checkOut.toFixed(2)}</span>
+                    <span className="text-green-600">In: €{day.checkIn.toFixed(2)}</span>
+                    <span className="text-blue-600">Out: €{day.checkOut.toFixed(2)}</span>
                   </div>
                 </div>
               ))}
@@ -606,9 +606,9 @@ const Reports: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">{`${String(t.quantity).padStart(2,'0')} pack`}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">₹{t.price.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">€{t.price.toFixed(2)}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{t.taxPercent}%</td>
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">₹{t.totalAmount.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">€{t.totalAmount.toFixed(2)}</td>
                   </tr>
                 ))
               )}
@@ -856,9 +856,9 @@ const Reports: React.FC = () => {
                       <tr className="hover:bg-gray-50">
                         <td className="px-6 py-4 text-sm font-medium text-gray-900 capitalize">{group.baseName}</td>
                         <td className="px-6 py-4 text-sm text-gray-600">{group.variantCount} variant(s)</td>
-                        <td className="px-6 py-4 text-sm text-gray-900 font-semibold">₹{group.avgPrice}</td>
-                        <td className="px-6 py-4 text-sm text-green-600 font-semibold">₹{group.minPrice}</td>
-                        <td className="px-6 py-4 text-sm text-red-600 font-semibold">₹{group.maxPrice}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-semibold">€{group.avgPrice}</td>
+                        <td className="px-6 py-4 text-sm text-green-600 font-semibold">€{group.minPrice}</td>
+                        <td className="px-6 py-4 text-sm text-red-600 font-semibold">€{group.maxPrice}</td>
                         <td className="px-6 py-4 text-sm font-semibold">
                           <span className={parseFloat(group.priceRange) > 20 ? 'text-red-600' : parseFloat(group.priceRange) > 10 ? 'text-orange-600' : 'text-green-600'}>
                             {group.priceRange}%
@@ -924,7 +924,7 @@ const Reports: React.FC = () => {
                                     <div className="space-y-1">
                                       <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Price:</span>
-                                        <span className="font-bold text-gray-900">₹{item.pricePerPack.toFixed(2)}</span>
+                                        <span className="font-bold text-gray-900">€{item.pricePerPack.toFixed(2)}</span>
                                       </div>
                                       <div className="flex justify-between text-xs">
                                         <span className="text-gray-600">vs Avg:</span>
