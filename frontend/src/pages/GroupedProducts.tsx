@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
-import { Package, ChevronDown, ChevronUp } from "lucide-react";
+import { Package, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { itemAPI } from "../services/api";
 import { useLoading } from "../context/LoadingContext";
 import { toast } from "react-toastify";
@@ -124,10 +124,49 @@ const GroupedProducts: React.FC = () => {
     });
   };
 
+  const downloadCSV = () => {
+    if (groupedItems.length === 0) {
+      toast.error("No data to download");
+      return;
+    }
+
+    let csvContent = "";
+
+    groupedItems.forEach((group) => {
+      csvContent += `"${group.groupName}","Total: ${formatQuantity(group.totalQuantity, group.baseUnit)}","${group.items.length} items"\n`;
+      csvContent += "Item Code,Item Name,Pack Qty,Current Qty,Total Quantity,Supplier,Category\n";
+      
+      group.items.forEach((item: any) => {
+        const totalQty = parseFloat(item.currentQty) * (item.packQty ? parseFloat(item.packQty) : 1);
+        csvContent += `"${item.itemCode}","${item.itemName}","${item.packQty} ${item.quantityType}","${item.currentQty} units","${formatQuantity(totalQty, item.quantityType)}","${item.supplier?.supplierName || '-'}","${item.category?.typeName || '-'}"\n`;
+      });
+      
+      csvContent += "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `grouped-products-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("CSV downloaded successfully");
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Grouped Products</h1>
+        <button
+          onClick={downloadCSV}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+        >
+          <Download size={20} />
+          Download CSV
+        </button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">

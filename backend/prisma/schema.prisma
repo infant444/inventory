@@ -21,6 +21,7 @@ enum categoryType {
   item
   financial
   group
+  quantityType
 }
 
 
@@ -120,7 +121,7 @@ model ItemMaster {
   rol              Decimal         @db.Decimal(10, 2)
   moq              Decimal?        @db.Decimal(10, 2)
   eoq              Decimal?        @db.Decimal(10, 2)
-  quantityType     qtyType          @default(gram)@map("quantity_type")
+  quantityType     String         @default("gram")@map("quantity_type")
   defaultIncrease   Decimal         @db.Decimal(10, 2)@default(1)@map("default_increase")
   defaultDecrease   Decimal         @db.Decimal(10, 2)@default(1)@map("default_decrease")
   lastPurchaseDate DateTime?       @map("last_purchase_date")

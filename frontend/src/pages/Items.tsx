@@ -67,6 +67,7 @@ const Items: React.FC = () => {
   const [printCount, setPrintCount] = useState("1");
   const [viewingItem, setViewingItem] = useState<Item | null>(null);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [qtyType,setQtyType]=useState<any[]>([])
   const [formData, setFormData] = useState({
     item_code: "",
     item_name: "",
@@ -88,6 +89,7 @@ const Items: React.FC = () => {
     groupName: "",
   });
   const { showLoading, hideLoading } = useLoading();
+
   const QTY_TYPES: string[] = [
     "gram",
     "milliliter",
@@ -136,6 +138,8 @@ const Items: React.FC = () => {
       setCategories(response.data);
       const res = await categoriesAPI.getTypeCategories("group");
       setGroup(res.data);
+      const resX=await categoriesAPI.getTypeCategories("quantityType");
+      setQtyType(resX.data)
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
@@ -735,9 +739,9 @@ const Items: React.FC = () => {
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    {QTY_TYPES.map((type) => (
-                      <option key={type} value={type} className=" capitalize">
-                        {type}
+                    {qtyType.map((type) => (
+                      <option key={type} value={type.typeName} className=" capitalize">
+                        {type.typeName}
                       </option>
                     ))}
                   </select>

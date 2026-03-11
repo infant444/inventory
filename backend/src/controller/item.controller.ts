@@ -65,6 +65,9 @@ export class ItemController {
                     type: true,
                     tax: true,
                     group: true
+                },
+                orderBy:{
+                    itemCode:'asc'
                 }
             })
             res.status(200).json(items)

@@ -329,7 +329,9 @@ export class ReportController {
                     turnoverRate: turnoverRate.toFixed(2),
                     supplier: item.supplier?.supplierName,
                     category: item.type?.typeName,
-                    lastTransaction: item.transactions[0]?.createdAt
+                    lastTransaction: item.transactions[0]?.createdAt,
+                    purchasePrice: Number(item.purchasePrice || 0),
+                    taxPercent: Number(item.taxPercent || 0)
                 };
             });
 
@@ -409,43 +411,68 @@ export class ReportController {
                 return;
             }
 
-            const items = await prisma.itemMaster.findMany({
-                where: { locationId },
+            // Get all check-in transactions to analyze actual purchase prices
+            const checkInTransactions = await prisma.transactionLog.findMany({
+                where: { 
+                    item: { locationId },
+                    transactionType: 'checkin'
+                },
                 include: {
-                    supplier: true,
-                    type: true
+                    item: {
+                        include: {
+                            supplier: true,
+                            type: true
+                        }
+                    }
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            // Group by item to get latest check-in price per pack
+            const itemPriceMap: any = {};
+            checkInTransactions.forEach(txn => {
+                const itemId = txn.itemId;
+                if (!itemPriceMap[itemId]) {
+                    const packQty = Number(txn.item.packQty || 1);
+                    const pricePerPack = Number(txn.item.purchasePrice);
+                    
+                    itemPriceMap[itemId] = {
+                        itemId: txn.item.itemId,
+                        itemCode: txn.item.itemCode,
+                        itemName: txn.item.itemName,
+                        supplier: txn.item.supplier?.supplierName || 'N/A',
+                        supplierId: txn.item.supplierId,
+                        category: txn.item.type?.typeName || 'Uncategorized',
+                        packQty,
+                        pricePerPack,
+                        quantityType: txn.quantityType,
+                        lastCheckInDate: txn.createdAt
+                    };
                 }
             });
 
+            // Group by category for comparison
             const categoryMap: any = {};
-            items.forEach(item => {
-                const category = item.type?.typeName || 'Uncategorized';
+            Object.values(itemPriceMap).forEach((item: any) => {
+                const category = item.category;
                 if (!categoryMap[category]) {
                     categoryMap[category] = [];
                 }
-                categoryMap[category].push({
-                    itemId: item.itemId,
-                    itemCode: item.itemCode,
-                    itemName: item.itemName,
-                    supplier: item.supplier?.supplierName || 'N/A',
-                    supplierId: item.supplierId,
-                    price: Number(item.purchasePrice),
-                    taxPercent: Number(item.taxPercent || 0)
-                });
+                categoryMap[category].push(item);
             });
 
+            // Calculate price comparison within each category
             const analysis: any[] = [];
             Object.entries(categoryMap).forEach(([category, items]: [string, any]) => {
                 if (items.length > 1) {
-                    const avgPrice = items.reduce((sum: number, i: any) => sum + i.price, 0) / items.length;
-                    const minPrice = Math.min(...items.map((i: any) => i.price));
-                    const maxPrice = Math.max(...items.map((i: any) => i.price));
+                    const avgPrice = items.reduce((sum: number, i: any) => sum + i.pricePerPack, 0) / items.length;
+                    const minPrice = Math.min(...items.map((i: any) => i.pricePerPack));
+                    const maxPrice = Math.max(...items.map((i: any) => i.pricePerPack));
                     
                     items.forEach((item: any) => {
-                        const priceDiff = ((item.price - avgPrice) / avgPrice) * 100;
+                        const priceDiff = ((item.pricePerPack - avgPrice) / avgPrice) * 100;
                         analysis.push({
                             ...item,
-                            category,
                             avgCategoryPrice: avgPrice.toFixed(2),
                             minCategoryPrice: minPrice.toFixed(2),
                             maxCategoryPrice: maxPrice.toFixed(2),
