@@ -158,7 +158,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">{txn.quantity} {txn.quantityType}</p>
+                    <p className="text-sm font-semibold">{txn.quantity} unit</p>
                     <span className={`text-xs px-2 py-1 rounded-full ${txn.transactionType === 'checkin' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                       {txn.transactionType.toUpperCase()}
                     </span>

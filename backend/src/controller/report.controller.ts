@@ -938,6 +938,20 @@ export class ReportController {
                 return;
             }
 
+            const convertToBaseUnit = (quantity: number, unit: string): { value: number; baseUnit: string } => {
+                const lowerUnit = unit?.toLowerCase().trim() || '';
+                if (lowerUnit === 'gram' || lowerUnit === 'grams' || lowerUnit === 'g') {
+                    return { value: quantity / 1000, baseUnit: 'kg' };
+                } else if (lowerUnit === 'kilogram' || lowerUnit === 'kg') {
+                    return { value: quantity, baseUnit: 'kg' };
+                } else if (lowerUnit === 'milliliter' || lowerUnit === 'ml') {
+                    return { value: quantity / 1000, baseUnit: 'L' };
+                } else if (lowerUnit === 'liter' || lowerUnit === 'l') {
+                    return { value: quantity, baseUnit: 'L' };
+                }
+                return { value: quantity, baseUnit: unit || 'units' };
+            };
+
             const grouped: any = {};
             let totalInventoryWorth = 0;
 
@@ -956,14 +970,19 @@ export class ReportController {
                     };
                 }
                 
-                const packQty = Number(item.packQty || 0);
-                const currentQty = Number(item.currentQty);
+                const packQty = Number(item.packQty || 1);
+                const currentQty = Number(item.currentQty || 0);
                 const purchasePrice = Number(item.purchasePrice || 0);
                 const itemTotalQty = packQty * currentQty;
                 const itemWorth = itemTotalQty * purchasePrice;
                 
-                grouped[groupId].totalQty += itemTotalQty;
-                grouped[groupId].qtyType = item.quantityType;
+                const converted = convertToBaseUnit(itemTotalQty, item.quantityType);
+                
+                if (!grouped[groupId].qtyType) {
+                    grouped[groupId].qtyType = converted.baseUnit;
+                }
+                
+                grouped[groupId].totalQty += converted.value;
                 grouped[groupId].totalWorth += itemWorth;
                 totalInventoryWorth += itemWorth;
                 
@@ -974,7 +993,8 @@ export class ReportController {
                     packQty,
                     currentQty,
                     totalQty: itemTotalQty,
-                    quantityType: item.quantityType,
+                    quantityType: item.quantityType || 'units',
+                    qtyType:item.quantityType,
                     purchasePrice,
                     itemWorth,
                     supplier: item.supplier?.supplierName,

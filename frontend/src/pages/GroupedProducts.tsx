@@ -38,13 +38,23 @@ const GroupedProducts: React.FC = () => {
     }
   };
 
+  const convertToBaseUnit = (quantity: number, unit: string): { value: number; unit: string } => {
+    const lowerUnit = unit.toLowerCase();
+    
+    if (lowerUnit === 'gram' || lowerUnit === 'grams') {
+      return { value: quantity / 1000, unit: 'kg' };
+    } else if (lowerUnit === 'kilogram' || lowerUnit === 'kg') {
+      return { value: quantity, unit: 'kg' };
+    } else if (lowerUnit === 'milliliter' || lowerUnit === 'ml') {
+      return { value: quantity / 1000, unit: 'L' };
+    } else if (lowerUnit === 'liter' || lowerUnit === 'l') {
+      return { value: quantity, unit: 'L' };
+    }
+    
+    return { value: quantity, unit: unit };
+  };
+
   const formatQuantity = (quantity: number, unit: string): string => {
-    if (unit.toLowerCase() === "gram" && quantity >= 1000) {
-      return `${(quantity / 1000).toFixed(2)} kg`;
-    }
-    if (unit.toLowerCase() === "milliliter" && quantity >= 1000) {
-      return `${(quantity / 1000).toFixed(2)} L`;
-    }
     return `${quantity.toFixed(2)} ${unit}`;
   };
 
@@ -73,7 +83,8 @@ const GroupedProducts: React.FC = () => {
       csvContent += "Item Code,Item Name,Pack Qty,Current Qty,Total Quantity,Purchase Price,Item Worth,Supplier,Category\n";
       
       group.items.forEach((item: any) => {
-        csvContent += `"${item.itemCode}","${item.itemName}","${item.packQty} ${item.quantityType}","${item.currentQty} units","${item.totalQty} ${item.quantityType}","₹${item.purchasePrice.toFixed(2)}","₹${item.itemWorth.toFixed(2)}","${item.supplier || '-'}","${item.category || '-'}"\n`;
+        const converted = convertToBaseUnit(item.totalQty, item.quantityType);
+        csvContent += `"${item.itemCode}","${item.itemName}","${item.packQty}","${item.currentQty} units","${converted.value.toFixed(2)} ${converted.unit}","₹${item.purchasePrice.toFixed(2)}","₹${item.itemWorth.toFixed(2)}","${item.supplier || '-'}","${item.category || '-'}"\n`;
       });
       
       csvContent += "\n";
@@ -199,12 +210,15 @@ const GroupedProducts: React.FC = () => {
                                     <div className="flex justify-between text-xs">
                                       <span className="text-gray-600">Total Quantity:</span>
                                       <span className="font-medium text-gray-900">
-                                        {item.totalQty} {item.quantityType}
+                                        {(() => {
+                                          const converted = convertToBaseUnit(item.totalQty, item.quantityType);
+                                          return `${converted.value.toFixed(2)} ${converted.unit}`;
+                                        })()}
                                       </span>
                                     </div>
                                     <div className="flex justify-between text-xs">
                                       <span className="text-gray-600">Pack Qty:</span>
-                                      <span className="font-medium text-gray-900">{item.packQty} {item.quantityType}</span>
+                                      <span className="font-medium text-gray-900">{item.packQty} &nbsp;<span className="semi-bold capitalize">{item.qtyType}</span></span>
                                     </div>
                                     <div className="flex justify-between text-xs">
                                       <span className="text-gray-600">Current Qty:</span>
