@@ -934,11 +934,13 @@ export class ReportController {
             });
 
             if (items.length === 0) {
-                res.status(200).json([]);
+                res.status(200).json({ groups: [], totalInventoryWorth: "0.00" });
                 return;
             }
 
             const grouped: any = {};
+            let totalInventoryWorth = 0;
+
             items.forEach(item => {
                 const groupId = item.groupName as string;
                 const groupName = item.group?.typeName || 'Ungrouped';
@@ -949,28 +951,41 @@ export class ReportController {
                         groupName,
                         totalQty: 0,
                         qtyType: '',
+                        totalWorth: 0,
                         items: []
                     };
                 }
                 
                 const packQty = Number(item.packQty || 0);
                 const currentQty = Number(item.currentQty);
-                grouped[groupId].totalQty += packQty * currentQty;
-                grouped[groupId].qtyType=item.quantityType;
+                const purchasePrice = Number(item.purchasePrice || 0);
+                const itemTotalQty = packQty * currentQty;
+                const itemWorth = itemTotalQty * purchasePrice;
+                
+                grouped[groupId].totalQty += itemTotalQty;
+                grouped[groupId].qtyType = item.quantityType;
+                grouped[groupId].totalWorth += itemWorth;
+                totalInventoryWorth += itemWorth;
+                
                 grouped[groupId].items.push({
                     itemId: item.itemId,
                     itemCode: item.itemCode,
                     itemName: item.itemName,
                     packQty,
                     currentQty,
-                    totalQty: packQty * currentQty,
+                    totalQty: itemTotalQty,
                     quantityType: item.quantityType,
+                    purchasePrice,
+                    itemWorth,
                     supplier: item.supplier?.supplierName,
                     category: item.type?.typeName
                 });
             });
-            console.log(grouped)
-            res.status(200).json(Object.values(grouped));
+            
+            res.status(200).json({
+                groups: Object.values(grouped),
+                totalInventoryWorth: totalInventoryWorth.toFixed(2)
+            });
         } catch (err) {
             next(err);
         }

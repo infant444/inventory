@@ -1,115 +1,51 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
-import { Package, ChevronDown, ChevronUp, Download } from "lucide-react";
-import { itemAPI } from "../services/api";
+import { Package, ChevronDown, ChevronUp, Download, DollarSign } from "lucide-react";
+import { reportAPI } from "../services/api";
 import { useLoading } from "../context/LoadingContext";
 import { toast } from "react-toastify";
 
 interface GroupedItem {
+  groupId: string;
   groupName: string;
-  totalQuantity: number;
-  baseUnit: string;
+  totalQty: number;
+  qtyType: string;
+  totalWorth: number;
   items: any[];
 }
 
 const GroupedProducts: React.FC = () => {
   const [groupedItems, setGroupedItems] = useState<GroupedItem[]>([]);
+  const [totalInventoryWorth, setTotalInventoryWorth] = useState(0);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
-    fetchAndGroupItems();
+    fetchGroupedProducts();
   }, []);
 
-  const convertToBaseUnit = (quantity: number, unit: string): { value: number; baseUnit: string } => {
-    const lowerUnit = unit.toLowerCase();
-    
-    if (lowerUnit === "kilogram") return { value: quantity * 1000, baseUnit: "gram" };
-    if (lowerUnit === "liter") return { value: quantity * 1000, baseUnit: "milliliter" };
-    if (lowerUnit === "gram") return { value: quantity, baseUnit: "gram" };
-    if (lowerUnit === "milliliter") return { value: quantity, baseUnit: "milliliter" };
-    if (lowerUnit === "milligram") return { value: quantity / 1000, baseUnit: "gram" };
-    if (lowerUnit === "bottle" || lowerUnit === "can") return { value: quantity, baseUnit: lowerUnit };
-    
-    return { value: quantity, baseUnit: unit };
-  };
-
-  const formatQuantity = (quantity: number, unit: string): string => {
-    const lowerUnit = unit.toLowerCase();
-    if (lowerUnit === "gram" && quantity >= 1000) {
-      return `${(quantity / 1000).toFixed(2)} kg`;
-    }
-    if (lowerUnit === "milliliter" && quantity >= 1000) {
-      return `${(quantity / 1000).toFixed(2)} L`;
-    }
-    return `${quantity.toFixed(2)} ${unit}`;
-  };
-
-  const getSmallestUnit = (units: string[]): string => {
-    const lowerUnits = units.map(u => u.toLowerCase());
-    if (lowerUnits.includes("gram") || lowerUnits.includes("milligram")) return "gram";
-    if (lowerUnits.includes("kilogram")) return "gram";
-    if (lowerUnits.includes("milliliter")) return "milliliter";
-    if (lowerUnits.includes("liter")) return "milliliter";
-    return units[0];
-  };
-
-  const fetchAndGroupItems = async () => {
+  const fetchGroupedProducts = async () => {
     showLoading("Loading grouped products...");
     try {
-      const response = await itemAPI.getItems();
-      const items = response.data;
-      console.log("All items:", items);
-
-      const grouped: { [key: string]: GroupedItem } = {};
-
-      items.forEach((item: any) => {
-        console.log("Item:", item.itemName, "GroupName:", item.groupName, "Group:", item.group);
-        if (!item.groupName || !item.group?.typeName) return;
-        
-        const groupKey = item.groupName;
-
-        if (!grouped[groupKey]) {
-          grouped[groupKey] = {
-            groupName: item.group.typeName,
-            totalQuantity: 0,
-            baseUnit: "",
-            items: [],
-          };
-        }
-
-        grouped[groupKey].items.push(item);
-      });
-
-      console.log("Grouped before calculation:", grouped);
-
-      Object.values(grouped).forEach((group) => {
-        const units = group.items.map((item: any) => item.quantityType);
-        const smallestUnit = getSmallestUnit(units);
-        group.baseUnit = smallestUnit;
-
-        group.totalQuantity = group.items.reduce((sum, item: any) => {
-          const actualQty = parseFloat(item.currentQty) * (item.packQty ? parseFloat(item.packQty) : 1);
-          const converted = convertToBaseUnit(actualQty, item.quantityType);
-          if (converted.baseUnit === smallestUnit) {
-            return sum + converted.value;
-          }
-          return sum;
-        }, 0);
-      });
-
-      const sortedGroups = Object.values(grouped).sort((a, b) =>
-        a.groupName.localeCompare(b.groupName)
-      );
-
-      console.log("Final sorted groups:", sortedGroups);
-      setGroupedItems(sortedGroups);
+      const response = await reportAPI.getGroupedProducts();
+      setGroupedItems(response.data.groups || []);
+      setTotalInventoryWorth(parseFloat(response.data.totalInventoryWorth || 0));
     } catch (error) {
-      console.error("Error fetching items:", error);
+      console.error("Error fetching grouped products:", error);
       toast.error("Failed to load grouped products");
     } finally {
       hideLoading();
     }
+  };
+
+  const formatQuantity = (quantity: number, unit: string): string => {
+    if (unit.toLowerCase() === "gram" && quantity >= 1000) {
+      return `${(quantity / 1000).toFixed(2)} kg`;
+    }
+    if (unit.toLowerCase() === "milliliter" && quantity >= 1000) {
+      return `${(quantity / 1000).toFixed(2)} L`;
+    }
+    return `${quantity.toFixed(2)} ${unit}`;
   };
 
   const toggleGroup = (groupName: string) => {
@@ -130,15 +66,14 @@ const GroupedProducts: React.FC = () => {
       return;
     }
 
-    let csvContent = "";
+    let csvContent = `"Total Inventory Worth","₹${totalInventoryWorth.toFixed(2)}"\n\n`;
 
     groupedItems.forEach((group) => {
-      csvContent += `"${group.groupName}","Total: ${formatQuantity(group.totalQuantity, group.baseUnit)}","${group.items.length} items"\n`;
-      csvContent += "Item Code,Item Name,Pack Qty,Current Qty,Total Quantity,Supplier,Category\n";
+      csvContent += `"${group.groupName}","Total: ${formatQuantity(group.totalQty, group.qtyType)}","Worth: ₹${group.totalWorth.toFixed(2)}","${group.items.length} items"\n`;
+      csvContent += "Item Code,Item Name,Pack Qty,Current Qty,Total Quantity,Purchase Price,Item Worth,Supplier,Category\n";
       
       group.items.forEach((item: any) => {
-        const totalQty = parseFloat(item.currentQty) * (item.packQty ? parseFloat(item.packQty) : 1);
-        csvContent += `"${item.itemCode}","${item.itemName}","${item.packQty} ${item.quantityType}","${item.currentQty} units","${formatQuantity(totalQty, item.quantityType)}","${item.supplier?.supplierName || '-'}","${item.category?.typeName || '-'}"\n`;
+        csvContent += `"${item.itemCode}","${item.itemName}","${item.packQty} ${item.quantityType}","${item.currentQty} units","${item.totalQty} ${item.quantityType}","₹${item.purchasePrice.toFixed(2)}","₹${item.itemWorth.toFixed(2)}","${item.supplier || '-'}","${item.category || '-'}"\n`;
       });
       
       csvContent += "\n";
@@ -159,7 +94,15 @@ const GroupedProducts: React.FC = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Grouped Products</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Grouped Products</h1>
+          <div className="flex items-center gap-2 mt-2">
+            <DollarSign className="text-green-600" size={20} />
+            <p className="text-lg font-semibold text-green-600">
+              Total Inventory Worth: ₹{totalInventoryWorth.toFixed(2)}
+            </p>
+          </div>
+        </div>
         <button
           onClick={downloadCSV}
           className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
@@ -190,6 +133,9 @@ const GroupedProducts: React.FC = () => {
                     Total Quantity
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Group Worth
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Items
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
@@ -205,7 +151,10 @@ const GroupedProducts: React.FC = () => {
                         {group.groupName}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
-                        {formatQuantity(group.totalQuantity, group.baseUnit)}
+                        {formatQuantity(group.totalQty, group.qtyType)}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold text-green-600">
+                        ₹{group.totalWorth.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {group.items.length} item(s)
@@ -231,7 +180,7 @@ const GroupedProducts: React.FC = () => {
                     </tr>
                     {expandedGroups.has(group.groupName) && (
                       <tr>
-                        <td colSpan={4} className="px-6 py-4 bg-gray-50">
+                        <td colSpan={5} className="px-6 py-4 bg-gray-50">
                           <div className="space-y-2">
                             <h4 className="text-sm font-semibold text-gray-700 mb-3">Items in this group:</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -248,23 +197,37 @@ const GroupedProducts: React.FC = () => {
                                   </div>
                                   <div className="space-y-1">
                                     <div className="flex justify-between text-xs">
-                                      <span className="text-gray-600">Quantity:</span>
+                                      <span className="text-gray-600">Total Quantity:</span>
                                       <span className="font-medium text-gray-900">
-                                        {formatQuantity(parseFloat(item.currentQty) * (item.packQty ? parseFloat(item.packQty) : 1), item.quantityType)}
+                                        {item.totalQty} {item.quantityType}
                                       </span>
                                     </div>
                                     <div className="flex justify-between text-xs">
-                                      <span className="text-gray-600">Pack Unit:</span>
-                                      <span className="font-medium text-gray-900 capitalize">{`${item.packQty} ${item.quantityType}`}</span>
+                                      <span className="text-gray-600">Pack Qty:</span>
+                                      <span className="font-medium text-gray-900">{item.packQty} {item.quantityType}</span>
                                     </div>
                                     <div className="flex justify-between text-xs">
-                                      <span className="text-gray-600">Current Quantity:</span>
-                                      <span className="font-medium text-gray-900 capitalize">{`${item.currentQty} units`}</span>
+                                      <span className="text-gray-600">Current Qty:</span>
+                                      <span className="font-medium text-gray-900">{item.currentQty} units</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-gray-600">Price/Unit:</span>
+                                      <span className="font-medium text-gray-900">₹{item.purchasePrice.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs border-t pt-1">
+                                      <span className="text-gray-600 font-semibold">Item Worth:</span>
+                                      <span className="font-semibold text-green-600">₹{item.itemWorth.toFixed(2)}</span>
                                     </div>
                                     {item.supplier && (
                                       <div className="flex justify-between text-xs">
                                         <span className="text-gray-600">Supplier:</span>
-                                        <span className="font-medium text-gray-900">{item.supplier.supplierName}</span>
+                                        <span className="font-medium text-gray-900">{item.supplier}</span>
+                                      </div>
+                                    )}
+                                    {item.category && (
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-gray-600">Category:</span>
+                                        <span className="font-medium text-gray-900">{item.category}</span>
                                       </div>
                                     )}
                                   </div>
