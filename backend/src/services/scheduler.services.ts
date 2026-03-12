@@ -7,7 +7,7 @@ const company_name = "ABC Company";
 
 export const startScheduler = () => {
   // Runs every day at 6 PM
-  cron.schedule("27 22 * * *", async () => {
+  cron.schedule("0 18 * * *", async () => {
     console.log("Running daily report scheduler...");
     await sendDailyReport();
   });
