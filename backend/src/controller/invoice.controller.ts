@@ -1,6 +1,7 @@
 import { Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 import { transporter, mailGenerator } from "../config/email.config";
+const PDFDocument = require('pdfkit');
 
 export class InvoiceController {
     static async createInvoice(req: any, res: Response, next: NextFunction) {
@@ -187,45 +188,109 @@ export class InvoiceController {
             });
 
             const emailList = emails.split(',').map((e: string) => e.trim()).filter((e: string) => e);
-            
-            const tableRows = invoices.map(inv => `
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${inv.invoiceNumber}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${inv.invoiceName}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">₹${parseFloat(inv.amount.toString()).toFixed(2)}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${new Date(inv.invoiceDate).toLocaleDateString()}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${new Date(inv.dueDate).toLocaleDateString()}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${inv.status}</td>
-                </tr>
-            `).join('');
+            if (emailList.length === 0) {
+                res.status(400).json({ message: "No valid email addresses provided" });
+                return;
+            }
 
-            const template = {
-                body: {
-                    intro: `Invoice Report (${new Date(start_date).toLocaleDateString()} - ${new Date(end_date).toLocaleDateString()})`,
-                    table: {
-                        data: invoices.map(inv => ({
-                            'Invoice #': inv.invoiceNumber,
-                            'Name': inv.invoiceName,
-                            'Amount': `₹${parseFloat(inv.amount.toString()).toFixed(2)}`,
-                            'Invoice Date': new Date(inv.invoiceDate).toLocaleDateString(),
-                            'Due Date': new Date(inv.dueDate).toLocaleDateString(),
-                            'Status': inv.status
-                        }))
-                    },
-                    outro: `Total Invoices: ${invoices.length}`
-                }
+            // Generate PDF
+            const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
+                const doc = new PDFDocument({ margin: 50 });
+                const chunks: Buffer[] = [];
+
+                doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+                doc.on('end', () => resolve(Buffer.concat(chunks)));
+                doc.on('error', reject);
+
+                // Header
+                doc.fontSize(20).font('Helvetica-Bold').text(`${type === 'general' ? 'Office' : 'Purchase'} Payment Report`, { align: 'center' });
+                doc.moveDown();
+                doc.fontSize(12).font('Helvetica').text(`Period: ${new Date(start_date).toLocaleDateString()} - ${new Date(end_date).toLocaleDateString()}`, { align: 'center' });
+                doc.moveDown(2);
+
+                // Table Header
+                const tableTop = doc.y;
+                const colPositions = [50, 130, 230, 320, 410, 500];
+                const colWidths = [80, 100, 90, 90, 90, 60];
+                const headers = ['Invoice #', 'Name', 'Amount', 'Invoice Date', 'Due Date', 'Status'];
+                
+                doc.fontSize(10).font('Helvetica-Bold');
+                doc.text(headers[0], colPositions[0], tableTop, { width: colWidths[0], align: 'left' });
+                doc.text(headers[1], colPositions[1], tableTop, { width: colWidths[1], align: 'left' });
+                doc.text(headers[2], colPositions[2], tableTop, { width: colWidths[2], align: 'right' });
+                doc.text(headers[3], colPositions[3], tableTop, { width: colWidths[3], align: 'center' });
+                doc.text(headers[4], colPositions[4], tableTop, { width: colWidths[4], align: 'center' });
+                doc.text(headers[5], colPositions[5], tableTop, { width: colWidths[5], align: 'left' });
+                
+                doc.moveTo(50, tableTop + 15).lineTo(560, tableTop + 15).stroke();
+                doc.moveDown();
+
+                // Table Rows
+                doc.font('Helvetica').fontSize(9);
+                invoices.forEach((inv) => {
+                    if (doc.y > 700) {
+                        doc.addPage();
+                    }
+                    
+                    const rowY = doc.y;
+                    doc.text(inv.invoiceNumber, colPositions[0], rowY, { width: colWidths[0], align: 'left' });
+                    doc.text(inv.invoiceName.substring(0, 15), colPositions[1], rowY, { width: colWidths[1], align: 'left' });
+                    doc.text(`₹${parseFloat(inv.amount.toString()).toFixed(2)}`, colPositions[2], rowY, { width: colWidths[2], align: 'right' });
+                    doc.text(new Date(inv.invoiceDate).toLocaleDateString('en-GB'), colPositions[3], rowY, { width: colWidths[3], align: 'center' });
+                    doc.text(new Date(inv.dueDate).toLocaleDateString('en-GB'), colPositions[4], rowY, { width: colWidths[4], align: 'center' });
+                    doc.text(inv.status, colPositions[5], rowY, { width: colWidths[5], align: 'left' });
+                    
+                    doc.moveDown();
+                });
+
+                // Summary
+                doc.moveDown();
+                doc.fontSize(10).font('Helvetica-Bold');
+                const totalAmount = invoices.reduce((sum, inv) => sum + parseFloat(inv.amount.toString()), 0);
+                doc.text(`Total Invoices: ${invoices.length}`, 50);
+                doc.text(`Total Amount: ₹${totalAmount.toFixed(2)}`, 50);
+
+                doc.end();
+            });
+
+            // Email content
+            const reportType = type === 'general' ? 'Office Payment' : 'Purchase Payment';
+            const emailBody = `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2>${reportType} Report</h2>
+                    <p>Please find attached the ${reportType.toLowerCase()} report for the period:</p>
+                    <p><strong>From:</strong> ${new Date(start_date).toLocaleDateString()}</p>
+                    <p><strong>To:</strong> ${new Date(end_date).toLocaleDateString()}</p>
+                    <p><strong>Total Invoices:</strong> ${invoices.length}</p>
+                    <p>The detailed report is attached as a PDF file.</p>
+                    <br/>
+                    <p>Best regards,<br/>ABC Company</p>
+                </div>
+            `;
+
+            // Send email: first as 'to', rest as 'bcc'
+            const toEmail = emailList[0];
+            const bccEmails = emailList.slice(1);
+
+            const mailOptions: any = {
+                from: '"ABC Company" <riplanit@gmail.com>',
+                to: toEmail,
+                subject: `${reportType} Report - ${new Date(start_date).toLocaleDateString()} to ${new Date(end_date).toLocaleDateString()}`,
+                html: emailBody,
+                attachments: [
+                    {
+                        filename: `${type}_payment_report_${new Date(start_date).toISOString().split('T')[0]}_to_${new Date(end_date).toISOString().split('T')[0]}.pdf`,
+                        content: pdfBuffer,
+                        contentType: 'application/pdf'
+                    }
+                ]
             };
 
-            const mail = mailGenerator.generate(template);
-
-            for (const email of emailList) {
-                await transporter.sendMail({
-                    from: '"ABC Company" <riplanit@gmail.com>',
-                    to: email,
-                    subject: `Invoice Report - ${type === 'general' ? 'Office' : 'Purchase'} Payments`,
-                    html: mail
-                });
+            if (bccEmails.length > 0) {
+                mailOptions.bcc = bccEmails.join(',');
             }
+
+            await transporter.sendMail(mailOptions);
 
             res.status(200).json({ message: "Email sent successfully" });
         } catch (err) {
