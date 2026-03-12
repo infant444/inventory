@@ -154,7 +154,7 @@ model TransactionLog {
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")
   item            ItemMaster      @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
-  user            User?           @relation(fields: [takenById], references: [userId], onDelete: SetNull)
+  user            User?           @relation(fields: [takenById], references: [userId], onDelete: Restrict)
 
   @@map("transaction_log")
 }

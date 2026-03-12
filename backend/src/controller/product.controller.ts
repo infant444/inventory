@@ -37,7 +37,7 @@ export class ProductController {
                         quantity: quantity,
                         quantityType,
                         remainingQty: newQty,
-                        takenBy: userId,
+                        takenById: userId,
                         remarks: notes || null
                     }
                 });
@@ -90,7 +90,7 @@ export class ProductController {
                         quantity: quantity,
                         quantityType,
                         remainingQty: newQty,
-                        takenBy: userId,
+                        takenById: userId,
                         remarks: notes || null
                     }
                 });
@@ -140,7 +140,7 @@ export class ProductController {
                             quantity: itemData.quantity,
                             quantityType: itemData.quantityType || 'gram',
                             remainingQty: newQty,
-                            takenBy: userId,
+                            takenById: userId,
                             remarks: itemData.notes || null
                         }
                     });
@@ -202,7 +202,7 @@ export class ProductController {
                             quantity: itemData.quantity,
                             quantityType: itemData.quantityType || 'gram',
                             remainingQty: newQty,
-                            takenBy: userId,
+                            takenById: userId,
                             remarks: itemData.notes || null
                         }
                     });

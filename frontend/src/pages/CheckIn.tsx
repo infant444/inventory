@@ -299,7 +299,7 @@ const CheckIn: React.FC = () => {
                 {billData.items?.map((item: any, idx: number) => (
                   <div key={idx} className="flex justify-between text-sm">
                     <span>{item.itemName} x{item.quantity}</span>
-                    <span>â‚¬{(item.price * item.quantity).toFixed(2)}</span>
+                    <span>€{(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -311,7 +311,7 @@ const CheckIn: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">
                   <span>Total:</span>
-                  <span>â‚¬{billData.totalAmount.toFixed(2)}</span>
+                  <span>€{billData.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
 
