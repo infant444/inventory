@@ -14,6 +14,9 @@ route.get("/barcode/:barcode", asyncHandler(ItemController.getItemByBarcode));
 route.get("/code/:itemCode", asyncHandler(ItemController.getItemByCode));
 route.put("/update/:itemId", asyncHandler(ItemController.updateItem));
 route.delete("/delete/:itemId", asyncHandler(ItemController.deleteItem));
+route.get("/price-history/:itemId", asyncHandler(ItemController.getItemPriceHistory));
+route.get("/all-prices", asyncHandler(ItemController.getAllItemPrices));
+route.get("/price-stats/:itemId", asyncHandler(ItemController.getItemPriceStats));
 
 // product config
 route.get("/config/:itemId", asyncHandler(ItemController.getItemById));

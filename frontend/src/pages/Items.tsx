@@ -695,7 +695,7 @@ const Items: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     min="0"
                     value={formData.current_qty}
                     onChange={(e) =>
@@ -710,7 +710,7 @@ const Items: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     min="0"
                     value={formData.packQty}
                     onChange={(e) =>
@@ -848,7 +848,7 @@ const Items: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="0.1"
                     min="0"
                     required
                     value={formData.purchase_price}

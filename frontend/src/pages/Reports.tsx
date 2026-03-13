@@ -1,4 +1,4 @@
-/* eslint-disable no-case-declarations */
+﻿/* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { Download, Printer, TrendingUp, TrendingDown, IndianRupee, Package, Calendar, FileText, AlertTriangle, Flame, Snowflake, DollarSign, ChevronDown, ChevronUp } from 'lucide-react';
@@ -27,6 +27,9 @@ const Reports: React.FC = () => {
   const [seasonalAnalysis, setSeasonalAnalysis] = useState<any[]>([]);
   const [seasonalMonth, setSeasonalMonth] = useState('');
   const [seasonalCategory, setSeasonalCategory] = useState('');
+  const [itemPriceAnalysis, setItemPriceAnalysis] = useState<any[]>([]);
+  const [selectedItemForChart, setSelectedItemForChart] = useState<any>(null);
+  const [itemPriceHistory, setItemPriceHistory] = useState<any[]>([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, totalPages: 0 });
   const { showLoading, hideLoading } = useLoading();
 
@@ -50,6 +53,8 @@ const Reports: React.FC = () => {
       fetchPriceComparison();
     } else if (activeTab === 'seasonal') {
       fetchSeasonalAnalysis();
+    } else if (activeTab === 'priceHistory') {
+      fetchItemPriceAnalysis();
     }
   }, [activeTab, dateFilter, pagination.page, supplierId, categoryId, seasonalMonth, seasonalCategory]);
 
@@ -288,10 +293,7 @@ const Reports: React.FC = () => {
         if (item.lastTransaction) {
           const month = new Date(item.lastTransaction).getMonth() + 1;
           
-          // Apply month filter
           if (seasonalMonth && month !== parseInt(seasonalMonth)) return;
-          
-          // Apply category filter
           if (seasonalCategory && item.category !== categories.find(c => c.typeId === seasonalCategory)?.typeName) return;
           
           const key = `${item.itemId}-${month}`;
@@ -313,6 +315,31 @@ const Reports: React.FC = () => {
       setSeasonalAnalysis(Object.values(monthlyData));
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to load');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const fetchItemPriceAnalysis = async () => {
+    showLoading('Loading item price analysis...');
+    try {
+      const response = await reportAPI.getAllItemPrices();
+      setItemPriceAnalysis(response.data);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const fetchItemPriceHistory = async (itemId: string) => {
+    showLoading('Loading price history...');
+    try {
+      const response = await reportAPI.getItemPriceStats(itemId);
+      setItemPriceHistory(response.data.priceHistory);
+      setSelectedItemForChart({ ...selectedItemForChart, stats: response.data });
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load price history');
     } finally {
       hideLoading();
     }
@@ -394,6 +421,10 @@ const Reports: React.FC = () => {
           <button onClick={() => setActiveTab('seasonal')} className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'seasonal' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
             <Calendar size={18} />
             Seasonal Analysis
+          </button>
+          <button onClick={() => setActiveTab('priceHistory')} className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'priceHistory' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+            <TrendingUp size={18} />
+            Price History
           </button>
         </div>
       </div>
@@ -1041,8 +1072,212 @@ const Reports: React.FC = () => {
         </div>
         </>
       )}
+
+      {/* Item Price History Analysis */}
+      {activeTab === 'priceHistory' && (
+        <div className="space-y-6">
+          {!selectedItemForChart ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Item Price History Analysis</h3>
+                <p className="text-sm text-gray-600 mt-1">Click on any item to view its price history chart</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Code</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {itemPriceAnalysis.map((item: any) => (
+                      <tr key={item.itemId} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm text-gray-900">{item.itemCode}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{item.itemName}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-gray-900">€{item.currentPrice.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{item.category}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{item.supplier}</td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => {
+                              setSelectedItemForChart(item);
+                              fetchItemPriceHistory(item.itemId);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View History
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{selectedItemForChart.itemName}</h3>
+                    <p className="text-sm text-gray-600">Code: {selectedItemForChart.itemCode}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedItemForChart(null);
+                      setItemPriceHistory([]);
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                  >
+                    Back to List
+                  </button>
+                </div>
+
+                {/* Price Chart */}
+                <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                  <h4 className="text-md font-semibold text-gray-900 mb-4">Price Trend Chart</h4>
+                  <div className="relative">
+                    <div className="relative h-80 border-b-2 border-l-2 border-gray-400 mb-12">
+                      {itemPriceHistory.length > 0 ? (
+                        <svg className="w-full h-full" viewBox="0 0 800 320" preserveAspectRatio="none">
+                          {(() => {
+                            const data = itemPriceHistory.slice(0, 15).reverse();
+                            const maxPrice = Math.max(...data.map((r: any) => parseFloat(r.price)));
+                            const minPrice = Math.min(...data.map((r: any) => parseFloat(r.price)));
+                            const priceRange = maxPrice - minPrice || 1;
+                            const padding = 40;
+                            const chartHeight = 280;
+                            const chartWidth = 760;
+                            const stepX = chartWidth / (data.length - 1 || 1);
+
+                            const points = data.map((record: any, idx: number) => {
+                              const x = padding + idx * stepX;
+                              const price = parseFloat(record.price);
+                              const y = chartHeight - ((price - minPrice) / priceRange) * (chartHeight - padding) + 20;
+                              return { x, y, price, date: record.createdAt };
+                            });
+
+                            const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+                            return (
+                              <>
+                                {/* Grid lines */}
+                                {[0, 1, 2, 3, 4].map((i) => {
+                                  const y = 20 + (chartHeight - padding) * (i / 4);
+                                  return (
+                                    <line key={i} x1={padding} y1={y} x2={chartWidth + padding} y2={y} stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4" />
+                                  );
+                                })}
+
+                                {/* Line path */}
+                                <path d={pathD} fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+
+                                {/* Data points with hover */}
+                                {points.map((point, idx) => (
+                                  <g key={idx}>
+                                    <circle 
+                                      cx={point.x} 
+                                      cy={point.y} 
+                                      r="6" 
+                                      fill="#3b82f6" 
+                                      stroke="#fff" 
+                                      strokeWidth="2"
+                                      className="cursor-pointer hover:r-8 transition-all"
+                                      data-price={point.price.toFixed(2)}
+                                      data-date={new Date(point.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    >
+                                      <title>€{point.price.toFixed(2)} - {new Date(point.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</title>
+                                    </circle>
+                                  </g>
+                                ))}
+                              </>
+                            );
+                          })()}
+                        </svg>
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-gray-500">
+                          No price history available
+                        </div>
+                      )}
+                    </div>
+                    {/* Date labels below chart */}
+                    {itemPriceHistory.length > 0 && (
+                      <div className="flex justify-around px-10">
+                        {itemPriceHistory.slice(0, 15).reverse().map((record: any, idx: number) => (
+                          <div key={idx} className="text-xs text-gray-600 text-center" style={{ minWidth: '60px' }}>
+                            {new Date(record.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Price History Table */}
+                <div className="bg-white rounded-lg border border-gray-200">
+                  <div className="p-4 border-b border-gray-200">
+                    <h4 className="text-md font-semibold text-gray-900">Price Change History</h4>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Change</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {itemPriceHistory.length === 0 ? (
+                          <tr>
+                            <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
+                              No price history records found
+                            </td>
+                          </tr>
+                        ) : (
+                          itemPriceHistory.map((record: any, idx: number) => {
+                            const prevPrice = idx < itemPriceHistory.length - 1 ? parseFloat(itemPriceHistory[idx + 1].price) : null;
+                            const currentPrice = parseFloat(record.price);
+                            const change = prevPrice ? ((currentPrice - prevPrice) / prevPrice * 100).toFixed(2) : null;
+                            
+                            return (
+                              <tr key={record.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 text-sm text-gray-900">
+                                  {new Date(record.createdAt).toLocaleString()}
+                                </td>
+                                <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                                  €{currentPrice.toFixed(2)}
+                                </td>
+                                <td className="px-6 py-4 text-sm">
+                                  {change ? (
+                                    <span className={parseFloat(change) > 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
+                                      {parseFloat(change) > 0 ? '+' : ''}{change}%
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400">-</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
 export default Reports;
+

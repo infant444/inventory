@@ -126,6 +126,9 @@ export const reportAPI = {
   getSupplierPriceAnalysis: () => api.get('/report/supplier-price-analysis'),
   getStockReport: (params?: any) => api.get('/report/stock-report', { params }),
   getGroupedProducts: () => api.get('/report/grouped-products'),
+  getItemPriceHistory: (itemId: string) => api.get(`/item/price-history/${itemId}`),
+  getAllItemPrices: () => api.get('/item/all-prices'),
+  getItemPriceStats: (itemId: string) => api.get(`/item/price-stats/${itemId}`),
 };
 
 export const invoiceAPI = {

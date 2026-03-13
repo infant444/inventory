@@ -41,7 +41,16 @@ export class ItemController {
                     packQty,
                     groupName
                 }
-            })
+            });
+
+            await prisma.itemPriceMaster.create({
+                data: {
+                    itemId: item.itemId,
+                    price: purchase_price,
+                    createdAt: new Date()
+                }
+            });
+
             res.status(201).json({ item });
         } catch (err) {
             next(err);
@@ -164,6 +173,22 @@ export class ItemController {
              const { rol, moq, eoq,defaultDecrease,defaultIncrease,quantityType } = req.body;
 
             const total_amount = purchase_price + (purchase_price * tax_percent) / 100;
+            
+            const existingItem = await prisma.itemMaster.findUnique({
+                where: { itemId: id }
+            });
+
+            // Only create price history if price actually changed
+            if (existingItem && Number(existingItem.purchasePrice) !== Number(purchase_price)) {
+                await prisma.itemPriceMaster.create({
+                    data: {
+                        itemId: id,
+                        price: purchase_price,
+                        createdAt: new Date()
+                    }
+                });
+            }
+
             const item = await prisma.itemMaster.update({
                 where: {
                     itemId: id,
@@ -187,11 +212,12 @@ export class ItemController {
                     defaultIncrease,
                     defaultDecrease,
                     packQty,
-                    groupName 
+                    groupName, 
+                    currentQty:current_qty
 
                 }
-            })
-            res.status(200).json(item)
+            });
+            res.status(200).json(item);
         } catch (err) {
             next(err)
         }
@@ -212,6 +238,114 @@ export class ItemController {
             res.status(200).json(item)
         } catch (err) {
             next(err)
+        }
+    }
+
+    static async getItemPriceHistory(req: any, res: Response, next: NextFunction) {
+        try {
+            const itemId = req.params.itemId;
+            const priceHistory = await prisma.itemPriceMaster.findMany({
+                where: { itemId },
+                orderBy: { createdAt: 'desc' }
+            });
+            res.status(200).json(priceHistory);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async getAllItemPrices(req: any, res: Response, next: NextFunction) {
+        try {
+            const locationId = req.headers.location_id;
+            if (!locationId) {
+                res.status(400).json({ message: "Location ID required" });
+                return;
+            }
+
+            const items = await prisma.itemMaster.findMany({
+                where: {
+                    locationId,
+                    isDisable: false
+                },
+                include: {
+                    priceHistory: {
+                        orderBy: { createdAt: 'asc' },
+                        take: 1
+                    },
+                    supplier: true,
+                    type: true
+                },
+                orderBy: { itemName: 'asc' }
+            });
+
+            const itemsWithPriceDetails = items.map(item => ({
+                itemId: item.itemId,
+                itemCode: item.itemCode,
+                itemName: item.itemName,
+                currentPrice: Number(item.purchasePrice),
+                latestPriceUpdate: item.priceHistory[0]?.createdAt || item.createdAt,
+                priceHistoryCount: item.priceHistory.length,
+                category: item.type?.typeName,
+                supplier: item.supplier?.supplierName,
+                taxPercent: Number(item.taxPercent || 0)
+            }));
+
+            res.status(200).json(itemsWithPriceDetails);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async getItemPriceStats(req: any, res: Response, next: NextFunction) {
+        try {
+            const itemId = req.params.itemId;
+            
+            const priceHistory = await prisma.itemPriceMaster.findMany({
+                where: { itemId },
+                orderBy: { createdAt: 'asc' }
+            });
+
+            if (priceHistory.length === 0) {
+                res.status(404).json({ message: "No price history found" });
+                return;
+            }
+
+            const prices = priceHistory.map(p => Number(p.price));
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+            const currentPrice = prices[prices.length - 1];
+            const firstPrice = prices[0];
+            const priceChange = currentPrice - firstPrice;
+            const priceChangePercent = firstPrice > 0 ? ((priceChange / firstPrice) * 100).toFixed(2) : '0.00';
+
+            const item = await prisma.itemMaster.findUnique({
+                where: { itemId },
+                include: { supplier: true, type: true }
+            });
+
+            res.status(200).json({
+                itemId,
+                itemCode: item?.itemCode,
+                itemName: item?.itemName,
+                category: item?.type?.typeName,
+                supplier: item?.supplier?.supplierName,
+                currentPrice,
+                firstPrice,
+                minPrice,
+                maxPrice,
+                avgPrice: avgPrice.toFixed(2),
+                priceChange: priceChange.toFixed(2),
+                priceChangePercent,
+                totalPriceUpdates: priceHistory.length,
+                priceHistory: priceHistory.map(p => ({
+                    id: p.id,
+                    price: Number(p.price),
+                    createdAt: p.createdAt
+                }))
+            });
+        } catch (err) {
+            next(err);
         }
     }
 
